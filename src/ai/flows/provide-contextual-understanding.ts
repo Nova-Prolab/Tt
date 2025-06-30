@@ -1,4 +1,4 @@
-// use server'
+'use server';
 
 /**
  * @fileOverview An AI agent that provides contextual understanding of phrases or panels in Manhwa.
