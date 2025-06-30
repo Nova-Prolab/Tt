@@ -6,6 +6,7 @@ import { Header } from "@/components/header";
 import { ImagePanel } from "@/components/image-panel";
 import { TranslationEditor } from "@/components/translation-editor";
 import { AiAssist } from "@/components/ai-assist";
+import { TranslationTools } from "@/components/translation-tools"; // New component
 import {
   provideContextualUnderstanding,
   ProvideContextualUnderstandingOutput,
@@ -18,12 +19,17 @@ import {
   explainPhraseContext,
   ExplainPhraseContextOutput,
 } from "@/ai/flows/explain-phrase-context";
+import {
+  translateText,
+  TranslateTextOutput,
+} from "@/ai/flows/translate-text"; // New flow
 import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [originalText, setOriginalText] = useState("");
-  const [translatedText, setTranslatedText] = useState("");
+  const [manualTranslation, setManualTranslation] = useState("");
+  const [aiTranslation, setAiTranslation] = useState("");
   const [selectedText, setSelectedText] = useState("");
   
   const [aiSuggestion, setAiSuggestion] =
@@ -33,22 +39,28 @@ export default function Home() {
   const [aiExplanation, setAiExplanation] = 
     useState<ExplainPhraseContextOutput | null>(null);
 
-  const [isAiLoading, setIsAiLoading] = useState<
-    "suggestion" | "context" | "explanation" | null
+  const [isLoading, setIsLoading] = useState<
+    "suggestion" | "context" | "explanation" | "translation" | null
   >(null);
 
   const { toast } = useToast();
+
+  const clearAiOutputs = () => {
+    setAiSuggestion(null);
+    setAiContext(null);
+    setAiExplanation(null);
+  }
 
   const handleImageUpload = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       setImageSrc(e.target?.result as string);
-      setOriginalText(""); // Reset text on new image
-      setTranslatedText("");
+      // Reset all text fields on new image
+      setOriginalText("");
+      setManualTranslation("");
+      setAiTranslation("");
       setSelectedText("");
-      setAiSuggestion(null);
-      setAiContext(null);
-      setAiExplanation(null);
+      clearAiOutputs();
     };
     reader.readAsDataURL(file);
   };
@@ -56,7 +68,8 @@ export default function Home() {
   const handleOriginalTextChange = (text: string) => {
     setOriginalText(text);
     setSelectedText("");
-    setAiExplanation(null);
+    clearAiOutputs();
+    setAiTranslation("");
   }
 
   // Mock OCR
@@ -73,30 +86,60 @@ export default function Home() {
       "여보세요! 오늘 기분이 어때?\n이 장면은 정말 놀라워."
     );
     setSelectedText("");
-    setAiExplanation(null);
+    clearAiOutputs();
+    setAiTranslation("");
     toast({
       title: "OCR Complete",
       description: "Text extracted from image.",
     });
   };
 
-  const handleSuggestImprovement = async () => {
-    if (!originalText || !translatedText) {
+  const handleAiTranslate = async () => {
+    if (!originalText) {
       toast({
-        title: "Missing Text",
-        description: "Please provide both original and translated text.",
+        title: "Missing Original Text",
+        description: "Please provide the original text to translate.",
         variant: "destructive",
       });
       return;
     }
-    setIsAiLoading("suggestion");
-    setAiSuggestion(null);
-    setAiContext(null);
-    setAiExplanation(null);
+    setIsLoading("translation");
+    setAiTranslation("");
+    clearAiOutputs();
+    try {
+      const result = await translateText({
+        text: originalText,
+        targetLanguage: "English",
+        sourceLanguage: "Korean",
+      });
+      setAiTranslation(result.translation);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "AI Error",
+        description: "Failed to get AI translation.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(null);
+    }
+  }
+
+  const handleSuggestImprovement = async () => {
+    if (!originalText || !manualTranslation) {
+      toast({
+        title: "Missing Text",
+        description: "Please provide both original and your translated text.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsLoading("suggestion");
+    clearAiOutputs();
     try {
       const result = await suggestTranslationImprovements({
         originalText,
-        translatedText,
+        translatedText: manualTranslation,
         context: "A friendly conversation between two characters in a modern setting.",
       });
       setAiSuggestion(result);
@@ -108,7 +151,7 @@ export default function Home() {
         variant: "destructive",
       });
     } finally {
-      setIsAiLoading(null);
+      setIsLoading(null);
     }
   };
 
@@ -121,13 +164,12 @@ export default function Home() {
       });
       return;
     }
-    setIsAiLoading("context");
-    setAiSuggestion(null);
-    setAiContext(null);
-    setAiExplanation(null);
+    setIsLoading("context");
+    clearAiOutputs();
     try {
       const result = await provideContextualUnderstanding({
         text: originalText,
+        image: imageSrc || undefined, // Pass image for better context
       });
       setAiContext(result);
     } catch (error) {
@@ -138,7 +180,7 @@ export default function Home() {
         variant: "destructive",
       });
     } finally {
-      setIsAiLoading(null);
+      setIsLoading(null);
     }
   };
 
@@ -151,14 +193,13 @@ export default function Home() {
       });
       return;
     }
-    setIsAiLoading("explanation");
-    setAiSuggestion(null);
-    setAiContext(null);
-    setAiExplanation(null);
+    setIsLoading("explanation");
+    clearAiOutputs();
     try {
       const result = await explainPhraseContext({
         phrase: selectedText,
         context: originalText,
+        image: imageSrc || undefined, // Pass image for better context
       });
       setAiExplanation(result);
     } catch (error) {
@@ -169,7 +210,7 @@ export default function Home() {
         variant: "destructive",
       });
     } finally {
-      setIsAiLoading(null);
+      setIsLoading(null);
     }
   };
 
@@ -178,7 +219,7 @@ export default function Home() {
     let mimeType = '';
     let filename = '';
 
-    if (!originalText && !translatedText) {
+    if (!originalText && !manualTranslation) {
         toast({
             title: "Nothing to Export",
             description: "Please add some text before exporting.",
@@ -188,11 +229,11 @@ export default function Home() {
     }
 
     if (format === 'txt') {
-        content = `Original:\n${originalText}\n\nTranslated:\n${translatedText}`;
+        content = `Original:\n${originalText}\n\nTranslated:\n${manualTranslation}`;
         mimeType = 'text/plain';
         filename = 'translation.txt';
     } else if (format === 'srt') {
-        const lines = translatedText.split('\n').filter(line => line.trim() !== '');
+        const lines = manualTranslation.split('\n').filter(line => line.trim() !== '');
         content = lines.map((line, index) => `${index + 1}\n00:00:0${index * 2},000 --> 00:00:0${index * 2 + 1},500\n${line}\n`).join('\n');
         mimeType = 'application/x-subrip';
         filename = 'translation.srt';
@@ -229,18 +270,25 @@ export default function Home() {
               originalText={originalText}
               onOriginalTextChange={handleOriginalTextChange}
               onOriginalTextSelect={setSelectedText}
-              translatedText={translatedText}
-              onTranslatedTextChange={setTranslatedText}
+              manualTranslation={manualTranslation}
+              onManualTranslationChange={setManualTranslation}
+              aiTranslation={aiTranslation}
+              isAiTranslating={isLoading === 'translation'}
+            />
+            <TranslationTools 
+              onTranslate={handleAiTranslate}
+              onSuggestImprovement={handleSuggestImprovement}
+              onGetContext={handleGetContext}
+              onExplainPhrase={handleExplainPhrase}
+              isLoading={isLoading}
+              isExplainPhraseDisabled={!selectedText}
             />
             <AiAssist
               suggestion={aiSuggestion}
               context={aiContext}
               explanation={aiExplanation}
               selectedText={selectedText}
-              onSuggestImprovement={handleSuggestImprovement}
-              onGetContext={handleGetContext}
-              onExplainPhrase={handleExplainPhrase}
-              isLoading={isAiLoading}
+              isLoading={isLoading}
             />
           </div>
         </div>
