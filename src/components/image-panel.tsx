@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Image from "next/image"
 import { useRef } from "react"
 import { useToast } from "@/hooks/use-toast"
+import { cn } from "@/lib/utils"
 
 type ImagePanelProps = {
   imageSrc: string | null;
@@ -41,7 +42,10 @@ export function ImagePanel({ imageSrc, onImageUpload, onOcr }: ImagePanelProps) 
         <CardTitle>Manhwa Panel</CardTitle>
         <CardDescription>Upload, crop, and extract text from your panel.</CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 flex items-center justify-center bg-muted/30 rounded-lg overflow-hidden border aspect-[2/3] min-h-[400px]">
+      <CardContent className={cn(
+        "flex-1 flex items-center justify-center rounded-lg overflow-hidden border aspect-[2/3] min-h-[400px] transition-colors",
+        !imageSrc ? "border-dashed bg-muted/30" : "bg-card"
+        )}>
         {imageSrc ? (
           <div className="relative w-full h-full">
              <Image
@@ -54,10 +58,10 @@ export function ImagePanel({ imageSrc, onImageUpload, onOcr }: ImagePanelProps) 
               />
           </div>
         ) : (
-          <div className="text-center text-muted-foreground p-8">
+          <div className="text-center text-muted-foreground p-8 flex flex-col items-center">
             <UploadCloud className="mx-auto h-12 w-12" />
-            <p className="mt-4 font-semibold">Upload an image to start</p>
-            <p className="mt-1 text-xs">You can upload a JPG, PNG, or WEBP file.</p>
+            <p className="mt-4 font-bold text-lg">Upload an image</p>
+            <p className="mt-1 text-sm">Drag and drop or click to select a file.</p>
           </div>
         )}
         <input

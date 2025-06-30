@@ -6,7 +6,7 @@ import { Header } from "@/components/header";
 import { ImagePanel } from "@/components/image-panel";
 import { TranslationEditor } from "@/components/translation-editor";
 import { AiAssist } from "@/components/ai-assist";
-import { TranslationTools } from "@/components/translation-tools"; // New component
+import { TranslationTools } from "@/components/translation-tools";
 import {
   provideContextualUnderstanding,
   ProvideContextualUnderstandingOutput,
@@ -22,7 +22,7 @@ import {
 import {
   translateText,
   TranslateTextOutput,
-} from "@/ai/flows/translate-text"; // New flow
+} from "@/ai/flows/translate-text";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
@@ -256,16 +256,16 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-secondary/30">
       <Header onExport={handleExport} />
       <main className="flex-1 container mx-auto p-4 md:p-6 lg:p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full items-start">
           <ImagePanel
             imageSrc={imageSrc}
             onImageUpload={handleImageUpload}
             onOcr={handleOcr}
           />
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-8">
             <TranslationEditor
               originalText={originalText}
               onOriginalTextChange={handleOriginalTextChange}
@@ -275,21 +275,23 @@ export default function Home() {
               aiTranslation={aiTranslation}
               isAiTranslating={isLoading === 'translation'}
             />
-            <TranslationTools 
-              onTranslate={handleAiTranslate}
-              onSuggestImprovement={handleSuggestImprovement}
-              onGetContext={handleGetContext}
-              onExplainPhrase={handleExplainPhrase}
-              isLoading={isLoading}
-              isExplainPhraseDisabled={!selectedText}
-            />
-            <AiAssist
-              suggestion={aiSuggestion}
-              context={aiContext}
-              explanation={aiExplanation}
-              selectedText={selectedText}
-              isLoading={isLoading}
-            />
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
+              <TranslationTools 
+                onTranslate={handleAiTranslate}
+                onSuggestImprovement={handleSuggestImprovement}
+                onGetContext={handleGetContext}
+                onExplainPhrase={handleExplainPhrase}
+                isLoading={isLoading}
+                isExplainPhraseDisabled={!selectedText}
+              />
+              <AiAssist
+                suggestion={aiSuggestion}
+                context={aiContext}
+                explanation={aiExplanation}
+                selectedText={selectedText}
+                isLoading={isLoading}
+              />
+            </div>
           </div>
         </div>
       </main>

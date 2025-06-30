@@ -65,7 +65,7 @@ export function TranslationEditor({
             value={originalText}
             onChange={(e) => onOriginalTextChange(e.target.value)}
             onSelect={handleOriginalTextSelect}
-            className="h-48 resize-none"
+            className="h-56 resize-none"
             aria-label="Original Text"
           />
         </div>
@@ -82,7 +82,7 @@ export function TranslationEditor({
                         placeholder="Enter your translation here..."
                         value={manualTranslation}
                         onChange={(e) => onManualTranslationChange(e.target.value)}
-                        className="h-40 resize-none"
+                        className="h-[196px] resize-none"
                         aria-label="Your Translation"
                     />
                 </TabsContent>
@@ -94,7 +94,7 @@ export function TranslationEditor({
                         placeholder="Click 'AI Translate' to generate a translation..."
                         value={aiTranslation}
                         readOnly
-                        className="h-40 resize-none bg-muted/50"
+                        className="h-[196px] resize-none bg-muted/50"
                         aria-label="AI Generated Translation"
                     />
                      {isAiTranslating && (

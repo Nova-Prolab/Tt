@@ -41,14 +41,14 @@ export function TranslationTools({
   };
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Translation Tools</CardTitle>
         <CardDescription>
           Use AI to translate, improve, and understand the text.
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid grid-cols-2 gap-4">
+      <CardContent className="flex flex-col gap-3">
         <Button onClick={onTranslate} disabled={!!isLoading}>
           {getButtonContent("translation", <Languages className="mr-2 h-4 w-4" />, "AI Translate")}
         </Button>

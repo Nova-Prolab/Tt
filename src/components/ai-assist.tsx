@@ -27,23 +27,26 @@ export function AiAssist({
   const isAssistantLoading = isLoading && ['suggestion', 'context', 'explanation'].includes(isLoading)
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>AI Assistant</CardTitle>
         <CardDescription>
           Contextual information and suggestions from AI will appear here.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4 min-h-[150px]">
+      <CardContent className="space-y-4 min-h-[200px]">
         {isAssistantLoading && (
-          <div className="flex items-center justify-center p-8">
+          <div className="flex flex-col items-center justify-center p-8 text-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="ml-4">Getting AI assistance...</p>
+            <p className="mt-4 font-semibold">Getting AI assistance...</p>
+            <p className="text-sm text-muted-foreground">This may take a moment.</p>
           </div>
         )}
         {!isAssistantLoading && !hasContent && (
-          <div className="text-center text-sm text-muted-foreground p-8 flex items-center justify-center h-full">
-            Use the translation tools to get AI-powered help.
+          <div className="text-center text-sm text-muted-foreground p-8 flex flex-col items-center justify-center h-full">
+             <Info className="h-10 w-10 mb-4 text-muted-foreground/50"/>
+            <span className="font-medium">Nothing to see here yet.</span>
+            <span>Use the translation tools to get AI-powered help.</span>
           </div>
         )}
         {hasContent && !isAssistantLoading && (
@@ -52,14 +55,14 @@ export function AiAssist({
               <AccordionItem value="item-1">
                 <AccordionTrigger>
                   <div className="flex items-center">
-                    <Lightbulb className="mr-2 h-4 w-4" />
+                    <Lightbulb className="mr-2 h-4 w-4 text-primary" />
                     Improvement Suggestion
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <div className="space-y-2 p-1">
+                  <div className="space-y-3 p-1">
                     <h4 className="font-semibold text-sm">Improved Translation</h4>
-                    <p className="text-base p-3 bg-muted rounded-md font-medium">{suggestion.improvedTranslation}</p>
+                    <p className="text-base p-3 bg-primary/10 border-l-4 border-primary rounded-r-md font-medium text-primary-foreground/90">{suggestion.improvedTranslation}</p>
                     <h4 className="font-semibold pt-2 text-sm">Explanation</h4>
                     <p className="text-sm text-muted-foreground">{suggestion.explanation}</p>
                   </div>
@@ -70,13 +73,13 @@ export function AiAssist({
               <AccordionItem value="item-2">
                 <AccordionTrigger>
                     <div className="flex items-center">
-                      <BookOpen className="mr-2 h-4 w-4" />
+                      <BookOpen className="mr-2 h-4 w-4 text-primary" />
                       Contextual Understanding
                     </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                    <div className="space-y-2 p-1">
-                        <p className="text-sm text-muted-foreground">{context.contextualUnderstanding}</p>
+                    <div className="space-y-2 p-2 bg-muted/50 rounded-md">
+                        <p className="text-sm text-muted-foreground leading-relaxed">{context.contextualUnderstanding}</p>
                     </div>
                 </AccordionContent>
               </AccordionItem>
@@ -85,14 +88,14 @@ export function AiAssist({
                <AccordionItem value="item-3">
                 <AccordionTrigger>
                   <div className="flex items-center">
-                    <Info className="mr-2 h-4 w-4" />
+                    <Info className="mr-2 h-4 w-4 text-primary" />
                     Phrase Explanation
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-2 p-1">
-                    <h4 className="font-semibold text-sm">Explanation for: <span className="italic">"{selectedText}"</span></h4>
-                    <p className="text-sm text-muted-foreground">{explanation.explanation}</p>
+                    <h4 className="font-semibold text-sm">Explanation for: <span className="italic font-normal p-1 bg-muted rounded-sm">"{selectedText}"</span></h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed pt-2">{explanation.explanation}</p>
                   </div>
                 </AccordionContent>
               </AccordionItem>
