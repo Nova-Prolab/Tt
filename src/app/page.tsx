@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Header } from "@/components/header";
 import { ImagePanel } from "@/components/image-panel";
 import { TranslationEditor } from "@/components/translation-editor";
-import { AiAssist } from "@/components/ai-assist";
 import {
   provideContextualUnderstanding,
   ProvideContextualUnderstandingOutput,
@@ -265,32 +264,27 @@ export default function Home() {
             onImageUpload={handleImageUpload}
             onOcr={handleOcr}
           />
-          <div className="flex flex-col gap-8">
-            <TranslationEditor
-              originalText={originalText}
-              onOriginalTextChange={handleOriginalTextChange}
-              onOriginalTextSelect={setSelectedText}
-              manualTranslation={manualTranslation}
-              onManualTranslationChange={setManualTranslation}
-              aiTranslation={aiTranslation}
-              isAiTranslating={isLoading === 'translation'}
-              translator={translator}
-              onTranslatorChange={setTranslator}
-              onTranslate={handleAiTranslate}
-              onSuggestImprovement={handleSuggestImprovement}
-              onGetContext={handleGetContext}
-              onExplainPhrase={handleExplainPhrase}
-              isLoading={isLoading}
-              isExplainPhraseDisabled={!selectedText}
-            />
-            <AiAssist
-              suggestion={aiSuggestion}
-              context={aiContext}
-              explanation={aiExplanation}
-              selectedText={selectedText}
-              isLoading={isLoading}
-            />
-          </div>
+          <TranslationEditor
+            originalText={originalText}
+            onOriginalTextChange={handleOriginalTextChange}
+            onOriginalTextSelect={setSelectedText}
+            manualTranslation={manualTranslation}
+            onManualTranslationChange={setManualTranslation}
+            aiTranslation={aiTranslation}
+            isAiTranslating={isLoading === 'translation'}
+            translator={translator}
+            onTranslatorChange={setTranslator}
+            onTranslate={handleAiTranslate}
+            onSuggestImprovement={handleSuggestImprovement}
+            onGetContext={handleGetContext}
+            onExplainPhrase={handleExplainPhrase}
+            isLoading={isLoading}
+            isExplainPhraseDisabled={!selectedText}
+            suggestion={aiSuggestion}
+            context={aiContext}
+            explanation={aiExplanation}
+            selectedText={selectedText}
+          />
         </div>
       </main>
     </div>
