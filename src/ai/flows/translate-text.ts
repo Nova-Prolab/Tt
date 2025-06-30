@@ -9,6 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/googleai';
 import {z} from 'genkit';
 
 const TranslateTextInputSchema = z.object({
@@ -18,6 +19,7 @@ const TranslateTextInputSchema = z.object({
     .string()
     .optional()
     .describe('The source language of the text.'),
+  model: z.string().optional().describe('The model to use for translation.'),
 });
 export type TranslateTextInput = z.infer<typeof TranslateTextInputSchema>;
 
@@ -52,7 +54,8 @@ const translateTextFlow = ai.defineFlow(
     outputSchema: TranslateTextOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const model = input.model ? googleAI.model(input.model) : undefined;
+    const {output} = await prompt(input, {model});
     return output!;
   }
 );

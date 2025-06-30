@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -6,7 +5,6 @@ import { Header } from "@/components/header";
 import { ImagePanel } from "@/components/image-panel";
 import { TranslationEditor } from "@/components/translation-editor";
 import { AiAssist } from "@/components/ai-assist";
-import { TranslationTools } from "@/components/translation-tools";
 import {
   provideContextualUnderstanding,
   ProvideContextualUnderstandingOutput,
@@ -31,6 +29,7 @@ export default function Home() {
   const [manualTranslation, setManualTranslation] = useState("");
   const [aiTranslation, setAiTranslation] = useState("");
   const [selectedText, setSelectedText] = useState("");
+  const [translator, setTranslator] = useState("gemini-2.0-flash");
   
   const [aiSuggestion, setAiSuggestion] =
     useState<SuggestTranslationImprovementsOutput | null>(null);
@@ -111,6 +110,7 @@ export default function Home() {
         text: originalText,
         targetLanguage: "English",
         sourceLanguage: "Korean",
+        model: translator,
       });
       setAiTranslation(result.translation);
     } catch (error) {
@@ -274,24 +274,22 @@ export default function Home() {
               onManualTranslationChange={setManualTranslation}
               aiTranslation={aiTranslation}
               isAiTranslating={isLoading === 'translation'}
+              translator={translator}
+              onTranslatorChange={setTranslator}
+              onTranslate={handleAiTranslate}
+              onSuggestImprovement={handleSuggestImprovement}
+              onGetContext={handleGetContext}
+              onExplainPhrase={handleExplainPhrase}
+              isLoading={isLoading}
+              isExplainPhraseDisabled={!selectedText}
             />
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
-              <TranslationTools 
-                onTranslate={handleAiTranslate}
-                onSuggestImprovement={handleSuggestImprovement}
-                onGetContext={handleGetContext}
-                onExplainPhrase={handleExplainPhrase}
-                isLoading={isLoading}
-                isExplainPhraseDisabled={!selectedText}
-              />
-              <AiAssist
-                suggestion={aiSuggestion}
-                context={aiContext}
-                explanation={aiExplanation}
-                selectedText={selectedText}
-                isLoading={isLoading}
-              />
-            </div>
+            <AiAssist
+              suggestion={aiSuggestion}
+              context={aiContext}
+              explanation={aiExplanation}
+              selectedText={selectedText}
+              isLoading={isLoading}
+            />
           </div>
         </div>
       </main>

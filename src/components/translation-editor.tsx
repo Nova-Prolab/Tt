@@ -1,15 +1,16 @@
-
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Copy, Loader2 } from "lucide-react"
+import { Copy, Loader2, Lightbulb, BookOpen, Info, Languages } from "lucide-react"
 import type React from "react"
 import { useToast } from "@/hooks/use-toast"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 
+type LoadingState = "suggestion" | "context" | "explanation" | "translation" | null;
 
 type TranslationEditorProps = {
   originalText: string;
@@ -19,6 +20,16 @@ type TranslationEditorProps = {
   onManualTranslationChange: (text: string) => void;
   aiTranslation: string;
   isAiTranslating: boolean;
+  
+  // New props for integrated tools
+  translator: string;
+  onTranslatorChange: (value: string) => void;
+  onSuggestImprovement: () => void;
+  onGetContext: () => void;
+  onExplainPhrase: () => void;
+  onTranslate: () => void;
+  isLoading: LoadingState;
+  isExplainPhraseDisabled: boolean;
 };
 
 export function TranslationEditor({
@@ -29,6 +40,14 @@ export function TranslationEditor({
   onManualTranslationChange,
   aiTranslation,
   isAiTranslating,
+  translator,
+  onTranslatorChange,
+  onSuggestImprovement,
+  onGetContext,
+  onExplainPhrase,
+  onTranslate,
+  isLoading,
+  isExplainPhraseDisabled,
 }: TranslationEditorProps) {
 
   const { toast } = useToast();
@@ -50,11 +69,29 @@ export function TranslationEditor({
     });
   };
 
+  const getButtonContent = (buttonType: Exclude<LoadingState, null>, icon: React.ReactNode, text: string) => {
+    if (isLoading === buttonType) {
+      return (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Processing...
+        </>
+      );
+    }
+    return (
+      <>
+        {icon}
+        {text}
+      </>
+    );
+  };
+
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Translation Editor</CardTitle>
-        <CardDescription>Edit the OCR text and write or generate your translation.</CardDescription>
+        <CardDescription>Edit the OCR text, translate, and use AI tools to assist you.</CardDescription>
       </CardHeader>
       <CardContent className="grid md:grid-cols-2 gap-6">
         <div className="grid gap-2">
@@ -65,7 +102,7 @@ export function TranslationEditor({
             value={originalText}
             onChange={(e) => onOriginalTextChange(e.target.value)}
             onSelect={handleOriginalTextSelect}
-            className="h-56 resize-none"
+            className="h-64 resize-none"
             aria-label="Original Text"
           />
         </div>
@@ -82,7 +119,7 @@ export function TranslationEditor({
                         placeholder="Enter your translation here..."
                         value={manualTranslation}
                         onChange={(e) => onManualTranslationChange(e.target.value)}
-                        className="h-[196px] resize-none"
+                        className="h-64 resize-none"
                         aria-label="Your Translation"
                     />
                 </TabsContent>
@@ -94,7 +131,7 @@ export function TranslationEditor({
                         placeholder="Click 'AI Translate' to generate a translation..."
                         value={aiTranslation}
                         readOnly
-                        className="h-[196px] resize-none bg-muted/50"
+                        className="h-64 resize-none bg-muted/50"
                         aria-label="AI Generated Translation"
                     />
                      {isAiTranslating && (
@@ -113,6 +150,34 @@ export function TranslationEditor({
             </Tabs>
         </div>
       </CardContent>
+      <CardFooter className="flex flex-col items-start gap-3 border-t pt-6">
+        <Label className="font-semibold">Translation Tools</Label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 w-full items-center gap-2">
+            <Select value={translator} onValueChange={onTranslatorChange} disabled={!!isLoading}>
+                <SelectTrigger>
+                    <SelectValue placeholder="Select a translator" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="gemini-2.0-flash">AI (Gemini Flash)</SelectItem>
+                    <SelectItem value="gemini-pro">AI (Gemini Pro)</SelectItem>
+                </SelectContent>
+            </Select>
+            <Button onClick={onTranslate} disabled={!!isLoading} className="w-full">
+                {getButtonContent("translation", <Languages className="mr-2 h-4 w-4" />, "AI Translate")}
+            </Button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full">
+            <Button variant="outline" onClick={onSuggestImprovement} disabled={!!isLoading}>
+                {getButtonContent("suggestion", <Lightbulb className="mr-2 h-4 w-4" />, "Suggest")}
+            </Button>
+            <Button variant="outline" onClick={onExplainPhrase} disabled={!!isLoading || isExplainPhraseDisabled}>
+                {getButtonContent("explanation", <Info className="mr-2 h-4 w-4" />, "Explain")}
+            </Button>
+            <Button variant="outline" onClick={onGetContext} disabled={!!isLoading}>
+                {getButtonContent("context", <BookOpen className="mr-2 h-4 w-4" />, "Context")}
+            </Button>
+        </div>
+    </CardFooter>
     </Card>
   )
 }
