@@ -26,6 +26,8 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
   const imgRef = useRef<HTMLImageElement>(null);
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+  const [renderedDimensions, setRenderedDimensions] = useState({ width: 0, height: 0 });
+
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -40,12 +42,19 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
     }
   };
 
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    // This is a key part of the fix. We capture the image's rendered dimensions
+    // as soon as it loads to ensure we have stable, correct values for scaling.
+    const { width, height } = e.currentTarget;
+    setRenderedDimensions({ width, height });
+  }
+
   const handleExtractText = async () => {
     const image = imgRef.current;
-    if (!image || !completedCrop || !completedCrop.width || !completedCrop.height) {
+    if (!image || !completedCrop || !completedCrop.width || !completedCrop.height || !renderedDimensions.width || !renderedDimensions.height) {
       toast({
-        title: "No hay selección",
-        description: "Por favor, selecciona un área en la imagen para extraer texto.",
+        title: "Error de Recorte",
+        description: "Asegúrate de que la imagen se ha cargado completamente y has seleccionado un área.",
         variant: "destructive",
       });
       return;
@@ -63,21 +72,16 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       return;
     }
     
-    // --- LÓGICA DE RECORTE CORREGIDA ---
-    // El problema anterior era un cálculo incorrecto de la escala.
-    // Esta nueva implementación utiliza las dimensiones renderizadas de la imagen (`image.width` y `image.height`)
-    // en lugar de `clientWidth`, que puede ser inconsistente.
-    // Esto asegura que la proporción entre la imagen original y la que se muestra en pantalla sea exacta.
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
+    // This is the definitive scaling logic. It uses the dimensions captured
+    // during the `onLoad` event, which are guaranteed to be correct.
+    const scaleX = image.naturalWidth / renderedDimensions.width;
+    const scaleY = image.naturalHeight / renderedDimensions.height;
     
-    // Se ajusta el tamaño del canvas para que coincida con el tamaño del recorte en la resolución original (alta calidad).
+    // Set canvas size to the high-resolution dimensions of the crop area.
     canvas.width = Math.floor(completedCrop.width * scaleX);
     canvas.height = Math.floor(completedCrop.height * scaleY);
 
-    // Se dibuja la porción recortada de la imagen original en el canvas.
-    // Las coordenadas del recorte (que están en píxeles de la imagen mostrada) se multiplican por la escala
-    // para encontrar la posición y el tamaño correctos en la imagen original.
+    // Draw the cropped portion of the original, full-resolution image onto the canvas.
     ctx.drawImage(
       image,
       completedCrop.x * scaleX,
@@ -90,8 +94,6 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       canvas.height
     );
     
-    // Se convierte el canvas a un Data URL en formato PNG para preservar la máxima calidad,
-    // lo cual es crucial para un buen resultado de OCR.
     const croppedImageDataUrl = canvas.toDataURL('image/png', 1.0);
     onOcr(croppedImageDataUrl);
   }
@@ -121,6 +123,7 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
               src={imageSrc}
               className="w-full h-auto"
               data-ai-hint="manhwa page"
+              onLoad={handleImageLoad}
             />
           </ReactCrop>
         ) : (
