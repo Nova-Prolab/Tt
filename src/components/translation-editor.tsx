@@ -254,8 +254,8 @@ export function TranslationEditor({
                     <SelectValue placeholder="Select a translator" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="gemini-2.0-flash">AI (Gemini Flash)</SelectItem>
-                    <SelectItem value="gemini-pro">AI (Gemini Pro)</SelectItem>
+                    <SelectItem value="google-translate">Google Translate</SelectItem>
+                    <SelectItem value="gemini-flash">AI (Gemini Flash)</SelectItem>
                 </SelectContent>
             </Select>
             <Button onClick={onTranslate} disabled={!!isLoading} className="w-full">

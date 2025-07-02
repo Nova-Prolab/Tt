@@ -19,7 +19,7 @@ const TranslateTextInputSchema = z.object({
     .string()
     .optional()
     .describe('The source language of the text.'),
-  model: z.string().optional().describe('The model to use for translation.'),
+  translator: z.string().optional().describe('The translator engine to use, e.g. "google-translate".'),
 });
 export type TranslateTextInput = z.infer<typeof TranslateTextInputSchema>;
 
@@ -34,11 +34,15 @@ export async function translateText(
   return translateTextFlow(input);
 }
 
+const InternalTranslateInputSchema = TranslateTextInputSchema.extend({
+  persona: z.string(),
+});
+
 const prompt = ai.definePrompt({
   name: 'translateTextPrompt',
-  input: {schema: TranslateTextInputSchema},
+  input: {schema: InternalTranslateInputSchema},
   output: {schema: TranslateTextOutputSchema},
-  prompt: `You are a professional translator. Translate the following text into {{targetLanguage}}.
+  prompt: `{{{persona}}} Translate the following text into {{targetLanguage}}.
 {{#if sourceLanguage}}The source language is {{sourceLanguage}}.{{/if}}
 
 Text to translate:
@@ -54,8 +58,16 @@ const translateTextFlow = ai.defineFlow(
     outputSchema: TranslateTextOutputSchema,
   },
   async input => {
-    const model = input.model ? googleAI.model(input.model) : undefined;
-    const {output} = await prompt(input, {model});
+    let persona = "You are a professional translator using an advanced AI model.";
+    if (input.translator === 'google-translate') {
+      persona = "You are simulating Google Translate. Provide a direct translation."
+    }
+
+    const model = googleAI.model('gemini-2.0-flash');
+    
+    const promptInput = { ...input, persona };
+
+    const {output} = await prompt(promptInput, {model});
     return output!;
   }
 );

@@ -28,7 +28,7 @@ export default function Home() {
   const [manualTranslation, setManualTranslation] = useState("");
   const [aiTranslation, setAiTranslation] = useState("");
   const [selectedText, setSelectedText] = useState("");
-  const [translator, setTranslator] = useState("gemini-2.0-flash");
+  const [translator, setTranslator] = useState("gemini-flash");
   
   const [aiSuggestion, setAiSuggestion] =
     useState<SuggestTranslationImprovementsOutput | null>(null);
@@ -109,7 +109,7 @@ export default function Home() {
         text: originalText,
         targetLanguage: "English",
         sourceLanguage: "Korean",
-        model: translator,
+        translator: translator,
       });
       setAiTranslation(result.translation);
     } catch (error) {
