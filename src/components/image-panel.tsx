@@ -40,11 +40,12 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
 
   const handleExtractText = async () => {
     const image = imgRef.current;
-    if (!image || !completedCrop) {
+    if (!image || !completedCrop || completedCrop.width === 0 || completedCrop.height === 0) {
         return;
     }
 
     const canvas = document.createElement('canvas');
+    // This is the key part: calculate the crop on the original image dimensions
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
     
@@ -56,6 +57,7 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
         throw new Error('No se pudo obtener el contexto 2d del canvas');
     }
 
+    // Draw the cropped portion of the original image onto the canvas
     ctx.drawImage(
       image,
       completedCrop.x * scaleX,
@@ -68,6 +70,7 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       canvas.height
     );
     
+    // Send the high-quality cropped image data to the AI
     const croppedImageDataUrl = canvas.toDataURL('image/jpeg');
     onOcr(croppedImageDataUrl);
   }
@@ -76,11 +79,13 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
     <Card className="flex flex-col h-full">
       <CardHeader>
         <CardTitle>Panel del Manhwa</CardTitle>
-        <CardDescription>Sube una imagen y selecciona un área para extraer su texto.</CardDescription>
+        <CardDescription>Sube una imagen grande, explórala con el scroll, selecciona un área y extrae su texto sin pérdida de calidad.</CardDescription>
       </CardHeader>
       <CardContent className={cn(
-        "flex-1 flex items-center justify-center rounded-lg overflow-hidden border min-h-[400px] transition-colors",
-        !imageSrc ? "border-dashed bg-muted/30" : "bg-card p-0"
+        "flex-1 flex justify-center rounded-lg border min-h-[400px] transition-colors",
+        imageSrc
+          ? "overflow-y-auto bg-card p-0"
+          : "items-center border-dashed bg-muted/30"
         )}>
         {imageSrc ? (
           <ReactCrop
@@ -88,13 +93,12 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
             onChange={(_, percentCrop) => setCrop(percentCrop)}
             onComplete={(c) => setCompletedCrop(c)}
             aspect={undefined} // Free crop
-            className="flex items-center justify-center"
           >
             <img
               ref={imgRef}
               alt="Panel del Manhwa para recortar"
               src={imageSrc}
-              style={{ maxHeight: '70vh', objectFit: 'contain' }}
+              className="w-full h-auto"
               data-ai-hint="manhwa page"
             />
           </ReactCrop>
