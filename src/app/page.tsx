@@ -24,6 +24,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { extractTextFromImage } from "@/ai/flows/extract-text-from-image";
 import { correctSpelling } from "@/ai/flows/correct-spelling";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Home() {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -394,27 +395,35 @@ export default function Home() {
             canUndo={canUndo}
             canRedo={canRedo}
           />
-          <div className="flex flex-col gap-8">
-            <ImagePanel
-              imageSrc={imageSrc}
-              onImageUpload={handleImageUpload}
-              onOcr={handleOcr}
-              isOcrLoading={isLoading === 'ocr'}
-            />
-            <AiAssist
-              onSuggestImprovement={handleSuggestImprovement}
-              onGetContext={handleGetContext}
-              onExplainPhrase={handleExplainPhrase}
-              onCorrectSpelling={handleCorrectSpelling}
-              onApplySuggestion={handleApplySuggestion}
-              isLoading={isLoading}
-              isExplainPhraseDisabled={!originalText && !selectedText}
-              suggestion={aiSuggestion}
-              context={aiContext}
-              explanation={aiExplanation}
-              selectedText={selectedText || originalText}
-            />
-          </div>
+          <Tabs defaultValue="image-panel" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="image-panel">Panel de Imagen</TabsTrigger>
+              <TabsTrigger value="ai-assist">Asistente de IA</TabsTrigger>
+            </TabsList>
+            <TabsContent value="image-panel">
+               <ImagePanel
+                imageSrc={imageSrc}
+                onImageUpload={handleImageUpload}
+                onOcr={handleOcr}
+                isOcrLoading={isLoading === 'ocr'}
+              />
+            </TabsContent>
+            <TabsContent value="ai-assist">
+                <AiAssist
+                onSuggestImprovement={handleSuggestImprovement}
+                onGetContext={handleGetContext}
+                onExplainPhrase={handleExplainPhrase}
+                onCorrectSpelling={handleCorrectSpelling}
+                onApplySuggestion={handleApplySuggestion}
+                isLoading={isLoading}
+                isExplainPhraseDisabled={!originalText && !selectedText}
+                suggestion={aiSuggestion}
+                context={aiContext}
+                explanation={aiExplanation}
+                selectedText={selectedText || originalText}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>
