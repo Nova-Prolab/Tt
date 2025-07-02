@@ -59,7 +59,7 @@ const prompt = ai.definePrompt({
     Here is the text from the previous panel: {{{previousContext}}}
     {{/if}}
 
-    Provide a contextual understanding of the panel.
+    Provide a contextual understanding of the panel. The response must be in Spanish.
     `,
 });
 

@@ -50,7 +50,7 @@ const prompt = ai.definePrompt({
   input: {schema: SuggestTranslationImprovementsInputSchema},
   output: {schema: SuggestTranslationImprovementsOutputSchema},
   prompt: `You are an expert Manhwa translator. You will be given the original text from a Manhwa panel, a current translation, and optional context.
-Your task is to provide an improved translation and explain why the translation was improved.
+Your task is to provide an improved translation and explain why the translation was improved. Respond in Spanish.
 
 Original Text: {{{originalText}}}
 Current Translation: {{{translatedText}}}

@@ -206,7 +206,7 @@ export function TranslationEditor({
                         <AccordionContent>
                           <div className="space-y-3 p-1">
                             <h4 className="font-semibold text-sm">Traducción Mejorada</h4>
-                            <p className="text-base p-3 bg-primary/10 border-l-4 border-primary rounded-r-md font-medium text-primary-foreground/90">{suggestion.improvedTranslation}</p>
+                            <p className="text-base p-3 bg-primary/10 border-l-4 border-primary rounded-r-md font-medium text-primary">{suggestion.improvedTranslation}</p>
                             <h4 className="font-semibold pt-2 text-sm">Explicación</h4>
                             <p className="text-sm text-muted-foreground">{suggestion.explanation}</p>
                           </div>
@@ -238,7 +238,7 @@ export function TranslationEditor({
                         </AccordionTrigger>
                         <AccordionContent>
                           <div className="space-y-2 p-1">
-                            <h4 className="font-semibold text-sm">Explicación para: <span className="italic font-normal p-1 bg-muted rounded-sm">"{selectedText}"</span></h4>
+                            <h4 className="font-semibold text-sm">Explicación para: <span className="italic font-normal p-1 bg-muted rounded-sm">"{selectedText || originalText}"</span></h4>
                             <p className="text-sm text-muted-foreground leading-relaxed pt-2">{explanation.explanation}</p>
                           </div>
                         </AccordionContent>

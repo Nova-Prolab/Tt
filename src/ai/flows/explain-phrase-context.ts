@@ -51,7 +51,7 @@ const prompt = ai.definePrompt({
   name: 'explainPhraseContextPrompt',
   input: {schema: ExplainPhraseContextInputSchema},
   output: {schema: ExplainPhraseContextOutputSchema},
-  prompt: `You are an expert in Manhwa culture and language. You will provide a detailed explanation of a specific phrase from a Manhwa panel, taking into account its context, cultural notes, and any visual cues from the image.
+  prompt: `You are an expert in Manhwa culture and language. You will provide a detailed explanation of a specific phrase from a Manhwa panel, taking into account its context, cultural notes, and any visual cues from the image. The explanation must be in Spanish.
 
 Phrase: {{{phrase}}}
 Context: {{{context}}}

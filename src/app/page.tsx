@@ -194,10 +194,11 @@ export default function Home() {
   };
 
   const handleExplainPhrase = async () => {
-    if (!selectedText) {
+    const textToExplain = selectedText || originalText;
+    if (!textToExplain) {
       toast({
-        title: "Ningún Texto Seleccionado",
-        description: "Por favor, selecciona una frase del texto original para explicar.",
+        title: "No hay Texto para Explicar",
+        description: "Por favor, añade texto original o selecciona una frase para obtener una explicación.",
         variant: "destructive",
       });
       return;
@@ -206,7 +207,7 @@ export default function Home() {
     clearAiOutputs();
     try {
       const result = await explainPhraseContext({
-        phrase: selectedText,
+        phrase: textToExplain,
         context: originalText,
         image: imageSrc || undefined, // Pass image for better context
       });
@@ -286,7 +287,7 @@ export default function Home() {
             onGetContext={handleGetContext}
             onExplainPhrase={handleExplainPhrase}
             isLoading={isLoading}
-            isExplainPhraseDisabled={!selectedText}
+            isExplainPhraseDisabled={!originalText}
             suggestion={aiSuggestion}
             context={aiContext}
             explanation={aiExplanation}
