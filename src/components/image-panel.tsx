@@ -51,7 +51,6 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       return;
     }
 
-    // Se crea un canvas para dibujar la imagen recortada.
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
@@ -64,18 +63,21 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       return;
     }
     
-    // La clave está en calcular la escala entre la imagen original (naturalWidth/Height)
-    // y la imagen mostrada en pantalla (clientWidth/Height).
-    const scaleX = image.naturalWidth / image.clientWidth;
-    const scaleY = image.naturalHeight / image.clientHeight;
-
-    // Se ajusta el tamaño del canvas para que coincida con el tamaño del recorte en la resolución original.
+    // --- LÓGICA DE RECORTE CORREGIDA ---
+    // El problema anterior era un cálculo incorrecto de la escala.
+    // Esta nueva implementación utiliza las dimensiones renderizadas de la imagen (`image.width` y `image.height`)
+    // en lugar de `clientWidth`, que puede ser inconsistente.
+    // Esto asegura que la proporción entre la imagen original y la que se muestra en pantalla sea exacta.
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    
+    // Se ajusta el tamaño del canvas para que coincida con el tamaño del recorte en la resolución original (alta calidad).
     canvas.width = Math.floor(completedCrop.width * scaleX);
     canvas.height = Math.floor(completedCrop.height * scaleY);
 
     // Se dibuja la porción recortada de la imagen original en el canvas.
-    // Las coordenadas del recorte (completedCrop) se multiplican por la escala para
-    // encontrar la posición correcta en la imagen de alta resolución.
+    // Las coordenadas del recorte (que están en píxeles de la imagen mostrada) se multiplican por la escala
+    // para encontrar la posición y el tamaño correctos en la imagen original.
     ctx.drawImage(
       image,
       completedCrop.x * scaleX,
@@ -88,9 +90,9 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       canvas.height
     );
     
-    // Se convierte el canvas a un Data URL en formato PNG para preservar la calidad,
+    // Se convierte el canvas a un Data URL en formato PNG para preservar la máxima calidad,
     // lo cual es crucial para un buen resultado de OCR.
-    const croppedImageDataUrl = canvas.toDataURL('image/png');
+    const croppedImageDataUrl = canvas.toDataURL('image/png', 1.0);
     onOcr(croppedImageDataUrl);
   }
 
