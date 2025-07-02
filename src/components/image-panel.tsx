@@ -51,19 +51,6 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       return;
     }
 
-    // Lee las dimensiones renderizadas actuales y las dimensiones naturales (originales)
-    // directamente del elemento de la imagen en el momento del clic. Este es el enfoque más fiable.
-    const { width: renderedWidth, height: renderedHeight, naturalWidth, naturalHeight } = image;
-
-    if (renderedWidth === 0 || renderedHeight === 0) {
-      toast({
-        title: "Error de Imagen",
-        description: "No se pudieron determinar las dimensiones de la imagen. Inténtalo de nuevo.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) {
@@ -75,15 +62,26 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       return;
     }
 
-    // Calcula los factores de escala de forma precisa.
+    // Solución definitiva: Usar getBoundingClientRect para obtener las dimensiones renderizadas precisas,
+    // lo cual es más fiable que .width/.height para imágenes escaladas en diseños complejos.
+    const { width: renderedWidth, height: renderedHeight } = image.getBoundingClientRect();
+    const { naturalWidth, naturalHeight } = image;
+    
+    if (renderedWidth === 0 || renderedHeight === 0) {
+        toast({
+            title: "Error de Imagen",
+            description: "No se pudieron determinar las dimensiones de la imagen. Inténtalo de nuevo.",
+            variant: "destructive",
+        });
+        return;
+    }
+
     const scaleX = naturalWidth / renderedWidth;
     const scaleY = naturalHeight / renderedHeight;
-
-    // El tamaño del canvas debe ser el tamaño del recorte en la resolución original.
+    
     canvas.width = Math.floor(completedCrop.width * scaleX);
     canvas.height = Math.floor(completedCrop.height * scaleY);
 
-    // Dibuja la porción recortada de la imagen original de alta resolución en el canvas.
     ctx.drawImage(
       image,
       completedCrop.x * scaleX,
@@ -96,7 +94,6 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       canvas.height
     );
     
-    // Pasa el recorte de alta calidad como un data URL.
     const croppedImageDataUrl = canvas.toDataURL('image/png', 1.0);
     onOcr(croppedImageDataUrl);
   }
