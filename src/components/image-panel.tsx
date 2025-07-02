@@ -40,13 +40,16 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
 
   const handleExtractText = async () => {
     const image = imgRef.current;
-    if (!image || !completedCrop || completedCrop.width === 0 || completedCrop.height === 0) {
+    if (!image || !completedCrop || !completedCrop.width || !completedCrop.height) {
         return;
     }
 
     const canvas = document.createElement('canvas');
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
+    
+    // Use clientWidth and clientHeight to get the rendered size of the image,
+    // which is more reliable than .width and .height properties for calculating the scale factor.
+    const scaleX = image.naturalWidth / image.clientWidth;
+    const scaleY = image.naturalHeight / image.clientHeight;
     
     canvas.width = completedCrop.width * scaleX;
     canvas.height = completedCrop.height * scaleY;
