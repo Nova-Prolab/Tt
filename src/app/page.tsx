@@ -21,6 +21,7 @@ import {
   TranslateTextOutput,
 } from "@/ai/flows/translate-text";
 import { useToast } from "@/hooks/use-toast";
+import { extractTextFromImage } from "@/ai/flows/extract-text-from-image";
 
 export default function Home() {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -39,7 +40,7 @@ export default function Home() {
     useState<ExplainPhraseContextOutput | null>(null);
 
   const [isLoading, setIsLoading] = useState<
-    "suggestion" | "context" | "explanation" | "translation" | null
+    "suggestion" | "context" | "explanation" | "translation" | "ocr" | null
   >(null);
 
   const { toast } = useToast();
@@ -71,8 +72,7 @@ export default function Home() {
     setAiTranslation("");
   }
 
-  // Mock OCR
-  const handleOcr = () => {
+  const handleOcr = async (croppedImageDataUrl: string) => {
     if (!imageSrc) {
       toast({
         title: "No hay Imagen",
@@ -81,16 +81,25 @@ export default function Home() {
       });
       return;
     }
-    setOriginalText(
-      "여보세요! 오늘 기분이 어때?\n이 장면은 정말 놀라워."
-    );
-    setSelectedText("");
-    clearAiOutputs();
-    setAiTranslation("");
-    toast({
-      title: "OCR Completado",
-      description: "Texto extraído de la imagen.",
-    });
+    setIsLoading("ocr");
+    try {
+      const result = await extractTextFromImage({ imageDataUri: croppedImageDataUrl });
+      // Append new text with a newline if there's existing text
+      setOriginalText(prev => (prev.trim() ? prev + "\n" : "") + result.extractedText);
+      toast({
+        title: "OCR Completado",
+        description: "Texto extraído de la selección y añadido al editor.",
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error de OCR",
+        description: "No se pudo extraer el texto de la imagen.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(null);
+    }
   };
 
   const handleAiTranslate = async () => {
@@ -287,6 +296,7 @@ export default function Home() {
             imageSrc={imageSrc}
             onImageUpload={handleImageUpload}
             onOcr={handleOcr}
+            isOcrLoading={isLoading === 'ocr'}
           />
         </div>
       </main>
