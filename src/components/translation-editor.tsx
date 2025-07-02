@@ -246,11 +246,11 @@ export function TranslationEditor({
         </div>
 
       </CardContent>
-      <CardFooter className="flex flex-col items-start gap-3 border-t pt-6">
-        <Label className="font-semibold">Translation Tools</Label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 w-full items-center gap-2">
+      <CardFooter className="flex flex-wrap items-center justify-between gap-4 border-t pt-6">
+        <div className="flex items-center gap-2 flex-wrap">
+            <Label htmlFor="translator-select" className="shrink-0">Translate with:</Label>
             <Select value={translator} onValueChange={onTranslatorChange} disabled={!!isLoading}>
-                <SelectTrigger>
+                <SelectTrigger id="translator-select" className="w-auto min-w-[180px]">
                     <SelectValue placeholder="Select a translator" />
                 </SelectTrigger>
                 <SelectContent>
@@ -258,18 +258,18 @@ export function TranslationEditor({
                     <SelectItem value="gemini-flash">AI (Gemini Flash)</SelectItem>
                 </SelectContent>
             </Select>
-            <Button onClick={onTranslate} disabled={!!isLoading} className="w-full">
+            <Button onClick={onTranslate} disabled={!!isLoading} className="w-full sm:w-auto">
                 {getButtonContent("translation", <Languages className="mr-2 h-4 w-4" />, "AI Translate")}
             </Button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full">
-            <Button variant="outline" onClick={onSuggestImprovement} disabled={!!isLoading}>
+        <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={onSuggestImprovement} disabled={!!isLoading}>
                 {getButtonContent("suggestion", <Lightbulb className="mr-2 h-4 w-4" />, "Suggest")}
             </Button>
-            <Button variant="outline" onClick={onExplainPhrase} disabled={!!isLoading || isExplainPhraseDisabled}>
+            <Button size="sm" variant="outline" onClick={onExplainPhrase} disabled={!!isLoading || isExplainPhraseDisabled}>
                 {getButtonContent("explanation", <Info className="mr-2 h-4 w-4" />, "Explain")}
             </Button>
-            <Button variant="outline" onClick={onGetContext} disabled={!!isLoading}>
+            <Button size="sm" variant="outline" onClick={onGetContext} disabled={!!isLoading}>
                 {getButtonContent("context", <BookOpen className="mr-2 h-4 w-4" />, "Context")}
             </Button>
         </div>

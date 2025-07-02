@@ -259,11 +259,6 @@ export default function Home() {
       <Header onExport={handleExport} />
       <main className="flex-1 container mx-auto p-4 md:p-6 lg:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full items-start">
-          <ImagePanel
-            imageSrc={imageSrc}
-            onImageUpload={handleImageUpload}
-            onOcr={handleOcr}
-          />
           <TranslationEditor
             originalText={originalText}
             onOriginalTextChange={handleOriginalTextChange}
@@ -284,6 +279,11 @@ export default function Home() {
             context={aiContext}
             explanation={aiExplanation}
             selectedText={selectedText}
+          />
+          <ImagePanel
+            imageSrc={imageSrc}
+            onImageUpload={handleImageUpload}
+            onOcr={handleOcr}
           />
         </div>
       </main>
