@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Copy, Loader2, Lightbulb, BookOpen, Info, Languages, SpellCheck } from "lucide-react"
+import { Copy, Loader2, Lightbulb, BookOpen, Info, Languages, SpellCheck, Undo, Redo } from "lucide-react"
 import type React from "react"
 import { useToast } from "@/hooks/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
@@ -14,6 +14,7 @@ import type { SuggestTranslationImprovementsOutput } from "@/ai/flows/suggest-tr
 import type { ExplainPhraseContextOutput } from "@/ai/flows/explain-phrase-context"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Separator } from "@/components/ui/separator"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type LoadingState = "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | null;
 
@@ -42,6 +43,11 @@ type TranslationEditorProps = {
   context: ProvideContextualUnderstandingOutput | null;
   explanation: ExplainPhraseContextOutput | null;
   selectedText: string;
+
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
 };
 
 export function TranslationEditor({
@@ -66,7 +72,11 @@ export function TranslationEditor({
   suggestion,
   context,
   explanation,
-  selectedText
+  selectedText,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
 }: TranslationEditorProps) {
 
   const { toast } = useToast();
@@ -146,7 +156,35 @@ export function TranslationEditor({
                             className="h-48 resize-none"
                             aria-label="Tu Traducción"
                         />
-                         <div className="flex justify-end pt-2">
+                         <div className="flex justify-between items-center pt-2">
+                            <div className="flex items-center gap-1">
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" onClick={onUndo} disabled={!canUndo}>
+                                                <Undo className="h-4 w-4" />
+                                                <span className="sr-only">Deshacer</span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Deshacer</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" onClick={onRedo} disabled={!canRedo}>
+                                                <Redo className="h-4 w-4" />
+                                                <span className="sr-only">Rehacer</span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Rehacer</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
                             <div className="flex items-center space-x-2 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
                                 <span>{manualTranslation.length} car.</span>
                                 <Separator orientation="vertical" className="h-3" />

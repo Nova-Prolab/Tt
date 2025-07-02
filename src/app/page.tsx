@@ -27,7 +27,12 @@ import { correctSpelling } from "@/ai/flows/correct-spelling";
 export default function Home() {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [originalText, setOriginalText] = useState("");
-  const [manualTranslation, setManualTranslation] = useState("");
+  
+  // Undo/Redo state for manual translation
+  const [manualTranslation, _setManualTranslation] = useState("");
+  const [translationHistory, setTranslationHistory] = useState<string[]>([""]);
+  const [currentHistoryIndex, setCurrentHistoryIndex] = useState(0);
+
   const [aiTranslation, setAiTranslation] = useState("");
   const [selectedText, setSelectedText] = useState("");
   const [translator, setTranslator] = useState("gemini-flash");
@@ -45,6 +50,37 @@ export default function Home() {
   >(null);
 
   const { toast } = useToast();
+
+  const setManualTranslation = (text: string) => {
+    // Only add to history if the text is different from the current history entry
+    if (translationHistory[currentHistoryIndex] !== text) {
+        const newHistory = translationHistory.slice(0, currentHistoryIndex + 1);
+        newHistory.push(text);
+        setTranslationHistory(newHistory);
+        setCurrentHistoryIndex(newHistory.length - 1);
+    }
+    _setManualTranslation(text);
+  };
+  
+  const handleUndo = () => {
+    if (currentHistoryIndex > 0) {
+      const newIndex = currentHistoryIndex - 1;
+      setCurrentHistoryIndex(newIndex);
+      _setManualTranslation(translationHistory[newIndex]);
+    }
+  };
+
+  const handleRedo = () => {
+    if (currentHistoryIndex < translationHistory.length - 1) {
+      const newIndex = currentHistoryIndex + 1;
+      setCurrentHistoryIndex(newIndex);
+      _setManualTranslation(translationHistory[newIndex]);
+    }
+  };
+  
+  const canUndo = currentHistoryIndex > 0;
+  const canRedo = currentHistoryIndex < translationHistory.length - 1;
+
 
   const clearAiOutputs = () => {
     setAiSuggestion(null);
@@ -349,11 +385,15 @@ export default function Home() {
             onExplainPhrase={handleExplainPhrase}
             onCorrectSpelling={handleCorrectSpelling}
             isLoading={isLoading}
-            isExplainPhraseDisabled={!originalText}
+            isExplainPhraseDisabled={!originalText && !selectedText}
             suggestion={aiSuggestion}
             context={aiContext}
             explanation={aiExplanation}
             selectedText={selectedText}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            canUndo={canUndo}
+            canRedo={canRedo}
           />
           <ImagePanel
             imageSrc={imageSrc}
