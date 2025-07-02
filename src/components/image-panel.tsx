@@ -26,8 +26,6 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
   const imgRef = useRef<HTMLImageElement>(null);
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
-  const [renderedDimensions, setRenderedDimensions] = useState({ width: 0, height: 0 });
-
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -42,27 +40,32 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
     }
   };
 
-  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    // This is a key part of the fix. We capture the image's rendered dimensions
-    // as soon as it loads to ensure we have stable, correct values for scaling.
-    const { width, height } = e.currentTarget;
-    setRenderedDimensions({ width, height });
-  }
-
-  const handleExtractText = async () => {
+  const handleExtractText = () => {
     const image = imgRef.current;
-    if (!image || !completedCrop || !completedCrop.width || !completedCrop.height || !renderedDimensions.width || !renderedDimensions.height) {
+    if (!image || !completedCrop || !completedCrop.width || !completedCrop.height) {
       toast({
         title: "Error de Recorte",
-        description: "Asegúrate de que la imagen se ha cargado completamente y has seleccionado un área.",
+        description: "Asegúrate de que la imagen se ha cargado y has seleccionado un área para recortar.",
         variant: "destructive",
       });
       return;
     }
 
+    // Lee las dimensiones renderizadas actuales y las dimensiones naturales (originales)
+    // directamente del elemento de la imagen en el momento del clic. Este es el enfoque más fiable.
+    const { width: renderedWidth, height: renderedHeight, naturalWidth, naturalHeight } = image;
+
+    if (renderedWidth === 0 || renderedHeight === 0) {
+      toast({
+        title: "Error de Imagen",
+        description: "No se pudieron determinar las dimensiones de la imagen. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-
     if (!ctx) {
       toast({
         title: "Error del Navegador",
@@ -71,17 +74,16 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       });
       return;
     }
-    
-    // This is the definitive scaling logic. It uses the dimensions captured
-    // during the `onLoad` event, which are guaranteed to be correct.
-    const scaleX = image.naturalWidth / renderedDimensions.width;
-    const scaleY = image.naturalHeight / renderedDimensions.height;
-    
-    // Set canvas size to the high-resolution dimensions of the crop area.
+
+    // Calcula los factores de escala de forma precisa.
+    const scaleX = naturalWidth / renderedWidth;
+    const scaleY = naturalHeight / renderedHeight;
+
+    // El tamaño del canvas debe ser el tamaño del recorte en la resolución original.
     canvas.width = Math.floor(completedCrop.width * scaleX);
     canvas.height = Math.floor(completedCrop.height * scaleY);
 
-    // Draw the cropped portion of the original, full-resolution image onto the canvas.
+    // Dibuja la porción recortada de la imagen original de alta resolución en el canvas.
     ctx.drawImage(
       image,
       completedCrop.x * scaleX,
@@ -94,6 +96,7 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       canvas.height
     );
     
+    // Pasa el recorte de alta calidad como un data URL.
     const croppedImageDataUrl = canvas.toDataURL('image/png', 1.0);
     onOcr(croppedImageDataUrl);
   }
@@ -123,7 +126,6 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
               src={imageSrc}
               className="w-full h-auto"
               data-ai-hint="manhwa page"
-              onLoad={handleImageLoad}
             />
           </ReactCrop>
         ) : (
