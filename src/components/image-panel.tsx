@@ -11,6 +11,7 @@ import { UploadCloud, ScanText, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
 
 type ImagePanelProps = {
   imageSrc: string | null;
@@ -20,6 +21,7 @@ type ImagePanelProps = {
 };
 
 export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: ImagePanelProps) {
+  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const [crop, setCrop] = useState<Crop>();
@@ -41,24 +43,39 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
   const handleExtractText = async () => {
     const image = imgRef.current;
     if (!image || !completedCrop || !completedCrop.width || !completedCrop.height) {
-        return;
+      toast({
+        title: "No hay selección",
+        description: "Por favor, selecciona un área en la imagen para extraer texto.",
+        variant: "destructive",
+      });
+      return;
     }
 
+    // Se crea un canvas para dibujar la imagen recortada.
     const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      toast({
+        title: "Error del Navegador",
+        description: "No se pudo obtener el contexto 2d del canvas.",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    // Use clientWidth and clientHeight to get the rendered size of the image,
-    // which is more reliable than .width and .height properties for calculating the scale factor.
+    // La clave está en calcular la escala entre la imagen original (naturalWidth/Height)
+    // y la imagen mostrada en pantalla (clientWidth/Height).
     const scaleX = image.naturalWidth / image.clientWidth;
     const scaleY = image.naturalHeight / image.clientHeight;
-    
-    canvas.width = completedCrop.width * scaleX;
-    canvas.height = completedCrop.height * scaleY;
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-        throw new Error('No se pudo obtener el contexto 2d del canvas');
-    }
 
+    // Se ajusta el tamaño del canvas para que coincida con el tamaño del recorte en la resolución original.
+    canvas.width = Math.floor(completedCrop.width * scaleX);
+    canvas.height = Math.floor(completedCrop.height * scaleY);
+
+    // Se dibuja la porción recortada de la imagen original en el canvas.
+    // Las coordenadas del recorte (completedCrop) se multiplican por la escala para
+    // encontrar la posición correcta en la imagen de alta resolución.
     ctx.drawImage(
       image,
       completedCrop.x * scaleX,
@@ -71,7 +88,9 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       canvas.height
     );
     
-    const croppedImageDataUrl = canvas.toDataURL('image/jpeg');
+    // Se convierte el canvas a un Data URL en formato PNG para preservar la calidad,
+    // lo cual es crucial para un buen resultado de OCR.
+    const croppedImageDataUrl = canvas.toDataURL('image/png');
     onOcr(croppedImageDataUrl);
   }
 
