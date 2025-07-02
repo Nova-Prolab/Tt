@@ -17,10 +17,6 @@ const ExplainPhraseContextInputSchema = z.object({
     .string()
     .optional()
     .describe('The surrounding context of the phrase in the panel.'),
-  previousContext: z
-    .string()
-    .optional()
-    .describe('Text from the previous panel for better context.'),
   image: z
     .string()
     .optional()
@@ -59,9 +55,6 @@ const prompt = ai.definePrompt({
 
 Phrase: {{{phrase}}}
 Current Panel Context: {{{context}}}
-{{#if previousContext}}
-Previous Panel Context: {{{previousContext}}}
-{{/if}}
 {{#if image}}
 Image: {{media url=image}}
 {{/if}}

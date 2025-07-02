@@ -19,10 +19,6 @@ const ProvideContextualUnderstandingInputSchema = z.object({
     .describe(
       "An optional photo of the Manhwa panel, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
-  previousContext: z
-    .string()
-    .optional()
-    .describe('The previous panels text, if it exists'),
 });
 export type ProvideContextualUnderstandingInput = z.infer<
   typeof ProvideContextualUnderstandingInputSchema
@@ -47,7 +43,7 @@ const prompt = ai.definePrompt({
   name: 'provideContextualUnderstandingPrompt',
   input: {schema: ProvideContextualUnderstandingInputSchema},
   output: {schema: ProvideContextualUnderstandingOutputSchema},
-  prompt: `You are an expert in Manhwa and will provide contextual understanding of panels.
+  prompt: `You are an expert in Manhwa and will provide contextual understanding of panels. The response must be in Spanish.
 
     Here is the text from the panel: {{{text}}}
 
@@ -55,11 +51,7 @@ const prompt = ai.definePrompt({
     Here is the image of the panel: {{media url=image}}
     {{/if}}
 
-    {{#if previousContext}}
-    Here is the text from the previous panel: {{{previousContext}}}
-    {{/if}}
-
-    Provide a contextual understanding of the panel. The response must be in Spanish.
+    Provide a contextual understanding of the panel.
     `,
 });
 

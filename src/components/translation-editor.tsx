@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Copy, Loader2, Lightbulb, BookOpen, Info, Languages } from "lucide-react"
+import { Copy, Loader2, Lightbulb, BookOpen, Info, Languages, SpellCheck } from "lucide-react"
 import type React from "react"
 import { useToast } from "@/hooks/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
@@ -15,7 +15,7 @@ import type { ExplainPhraseContextOutput } from "@/ai/flows/explain-phrase-conte
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Separator } from "@/components/ui/separator"
 
-type LoadingState = "suggestion" | "context" | "explanation" | "translation" | "ocr" | null;
+type LoadingState = "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | null;
 
 type TranslationEditorProps = {
   originalText: string;
@@ -23,8 +23,6 @@ type TranslationEditorProps = {
   onOriginalTextSelect: (text: string) => void;
   manualTranslation: string;
   onManualTranslationChange: (text: string) => void;
-  previousPanelText: string;
-  onPreviousPanelTextChange: (text: string) => void;
   aiTranslation: string;
   isAiTranslating: boolean;
   
@@ -35,6 +33,7 @@ type TranslationEditorProps = {
   onSuggestImprovement: () => void;
   onGetContext: () => void;
   onExplainPhrase: () => void;
+  onCorrectSpelling: () => void;
   onTranslate: () => void;
   isLoading: LoadingState;
   isExplainPhraseDisabled: boolean;
@@ -51,8 +50,6 @@ export function TranslationEditor({
   onOriginalTextSelect,
   manualTranslation,
   onManualTranslationChange,
-  previousPanelText,
-  onPreviousPanelTextChange,
   aiTranslation,
   isAiTranslating,
   translator,
@@ -62,6 +59,7 @@ export function TranslationEditor({
   onSuggestImprovement,
   onGetContext,
   onExplainPhrase,
+  onCorrectSpelling,
   onTranslate,
   isLoading,
   isExplainPhraseDisabled,
@@ -148,8 +146,12 @@ export function TranslationEditor({
                             className="h-48 resize-none"
                             aria-label="Tu Traducción"
                         />
-                         <div className="text-xs text-muted-foreground mt-2 text-right">
-                            {manualTranslation.length} caracteres | {wordCount} palabras
+                         <div className="flex justify-end pt-2">
+                            <div className="flex items-center space-x-2 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+                                <span>{manualTranslation.length} car.</span>
+                                <Separator orientation="vertical" className="h-3" />
+                                <span>{wordCount} pal.</span>
+                            </div>
                         </div>
                     </TabsContent>
                     <TabsContent value="ai" className="mt-2">
@@ -180,18 +182,6 @@ export function TranslationEditor({
             </div>
         </div>
         
-        <div className="grid gap-2">
-            <Label htmlFor="previous-panel-text">Contexto del Panel Anterior (Opcional)</Label>
-            <Textarea
-                id="previous-panel-text"
-                placeholder="Añade texto del panel anterior para mejorar la precisión de la IA..."
-                value={previousPanelText}
-                onChange={(e) => onPreviousPanelTextChange(e.target.value)}
-                className="h-24 resize-none"
-                aria-label="Contexto del Panel Anterior"
-            />
-        </div>
-
         <div className="space-y-4 pt-2">
             <div className="flex items-center gap-4">
                 <Separator className="flex-1" />
@@ -226,7 +216,7 @@ export function TranslationEditor({
                         <AccordionContent>
                           <div className="space-y-3 p-1">
                             <h4 className="font-semibold text-sm">Traducción Mejorada</h4>
-                            <p className="text-base p-3 bg-primary/10 border-l-4 border-primary rounded-r-md font-medium text-primary-foreground/90">{suggestion.improvedTranslation}</p>
+                            <p className="text-base p-3 bg-primary/10 border-l-4 border-primary rounded-r-md font-medium text-foreground">{suggestion.improvedTranslation}</p>
                             <h4 className="font-semibold pt-2 text-sm">Explicación</h4>
                             <p className="text-sm text-muted-foreground">{suggestion.explanation}</p>
                           </div>
@@ -299,6 +289,9 @@ export function TranslationEditor({
             </Button>
         </div>
         <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={onCorrectSpelling} disabled={!!isLoading}>
+                {getButtonContent("spelling", <SpellCheck className="mr-2 h-4 w-4" />, "Corregir")}
+            </Button>
             <Button size="sm" variant="outline" onClick={onSuggestImprovement} disabled={!!isLoading}>
                 {getButtonContent("suggestion", <Lightbulb className="mr-2 h-4 w-4" />, "Sugerir")}
             </Button>

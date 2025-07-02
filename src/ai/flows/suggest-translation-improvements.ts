@@ -22,10 +22,6 @@ const SuggestTranslationImprovementsInputSchema = z.object({
     .string()
     .optional()
     .describe('Additional context about the Manhwa panel or scene.'),
-  previousContext: z
-    .string()
-    .optional()
-    .describe('Text from the previous panel for better context.'),
 });
 export type SuggestTranslationImprovementsInput = z.infer<
   typeof SuggestTranslationImprovementsInputSchema
@@ -61,11 +57,8 @@ Current Translation: {{{translatedText}}}
 {{#if context}}
 Context: {{{context}}}
 {{/if}}
-{{#if previousContext}}
-Previous Panel Text: {{{previousContext}}}
-{{/if}}
 
-Improved Translation:`, 
+Improved Translation:`,
 });
 
 const suggestTranslationImprovementsFlow = ai.defineFlow(

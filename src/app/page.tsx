@@ -22,11 +22,11 @@ import {
 } from "@/ai/flows/translate-text";
 import { useToast } from "@/hooks/use-toast";
 import { extractTextFromImage } from "@/ai/flows/extract-text-from-image";
+import { correctSpelling } from "@/ai/flows/correct-spelling";
 
 export default function Home() {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [originalText, setOriginalText] = useState("");
-  const [previousPanelText, setPreviousPanelText] = useState("");
   const [manualTranslation, setManualTranslation] = useState("");
   const [aiTranslation, setAiTranslation] = useState("");
   const [selectedText, setSelectedText] = useState("");
@@ -41,7 +41,7 @@ export default function Home() {
     useState<ExplainPhraseContextOutput | null>(null);
 
   const [isLoading, setIsLoading] = useState<
-    "suggestion" | "context" | "explanation" | "translation" | "ocr" | null
+    "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | null
   >(null);
 
   const { toast } = useToast();
@@ -56,7 +56,6 @@ export default function Home() {
     const reader = new FileReader();
     reader.onload = (e) => {
       setImageSrc(e.target?.result as string);
-      // Do not reset text fields, user might want to keep context
     };
     reader.readAsDataURL(file);
   };
@@ -80,7 +79,6 @@ export default function Home() {
     setIsLoading("ocr");
     try {
       const result = await extractTextFromImage({ imageDataUri: croppedImageDataUrl });
-      // Append new text with a newline if there's existing text
       setOriginalText(prev => (prev.trim() ? prev + "\n" : "") + result.extractedText);
       toast({
         title: "OCR Completado",
@@ -146,7 +144,6 @@ export default function Home() {
         originalText,
         translatedText: manualTranslation,
         context: "Una conversación amistosa entre dos personajes en un entorno moderno.",
-        previousContext: previousPanelText,
       });
       setAiSuggestion(result);
     } catch (error) {
@@ -176,7 +173,6 @@ export default function Home() {
       const result = await provideContextualUnderstanding({
         text: originalText,
         image: imageSrc || undefined,
-        previousContext: previousPanelText,
       });
       setAiContext(result);
     } catch (error) {
@@ -207,7 +203,6 @@ export default function Home() {
       const result = await explainPhraseContext({
         phrase: textToExplain,
         context: originalText,
-        previousContext: previousPanelText,
         image: imageSrc || undefined,
       });
       setAiExplanation(result);
@@ -222,6 +217,39 @@ export default function Home() {
       setIsLoading(null);
     }
   };
+
+  const handleCorrectSpelling = async () => {
+    if (!manualTranslation) {
+      toast({
+        title: "No hay Traducción",
+        description: "Por favor, escribe una traducción para poder corregirla.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsLoading("spelling");
+    try {
+      const result = await correctSpelling({
+        text: manualTranslation,
+        language: targetLanguage,
+      });
+      setManualTranslation(result.correctedText);
+      toast({
+        title: "Corrección Completa",
+        description: "Se ha corregido la ortografía de tu traducción.",
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error de IA",
+        description: "No se pudo realizar la corrección ortográfica.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
 
   const handleExport = (format: 'txt' | 'srt' | 'docx') => {
     let content = '';
@@ -309,8 +337,6 @@ export default function Home() {
             onOriginalTextSelect={setSelectedText}
             manualTranslation={manualTranslation}
             onManualTranslationChange={setManualTranslation}
-            previousPanelText={previousPanelText}
-            onPreviousPanelTextChange={setPreviousPanelText}
             aiTranslation={aiTranslation}
             isAiTranslating={isLoading === 'translation'}
             translator={translator}
@@ -321,6 +347,7 @@ export default function Home() {
             onSuggestImprovement={handleSuggestImprovement}
             onGetContext={handleGetContext}
             onExplainPhrase={handleExplainPhrase}
+            onCorrectSpelling={handleCorrectSpelling}
             isLoading={isLoading}
             isExplainPhraseDisabled={!originalText}
             suggestion={aiSuggestion}
