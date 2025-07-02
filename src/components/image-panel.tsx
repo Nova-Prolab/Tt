@@ -45,7 +45,6 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
     }
 
     const canvas = document.createElement('canvas');
-    // This is the key part: calculate the crop on the original image dimensions
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
     
@@ -57,7 +56,6 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
         throw new Error('No se pudo obtener el contexto 2d del canvas');
     }
 
-    // Draw the cropped portion of the original image onto the canvas
     ctx.drawImage(
       image,
       completedCrop.x * scaleX,
@@ -70,7 +68,6 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       canvas.height
     );
     
-    // Send the high-quality cropped image data to the AI
     const croppedImageDataUrl = canvas.toDataURL('image/jpeg');
     onOcr(croppedImageDataUrl);
   }
@@ -90,9 +87,9 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
         {imageSrc ? (
           <ReactCrop
             crop={crop}
-            onChange={(_, percentCrop) => setCrop(percentCrop)}
+            onChange={c => setCrop(c)}
             onComplete={(c) => setCompletedCrop(c)}
-            aspect={undefined} // Free crop
+            aspect={undefined}
           >
             <img
               ref={imgRef}
