@@ -15,7 +15,7 @@ import type { ExplainPhraseContextOutput } from "@/ai/flows/explain-phrase-conte
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Separator } from "@/components/ui/separator"
 
-type LoadingState = "suggestion" | "context" | "explanation" | "translation" | null;
+type LoadingState = "suggestion" | "context" | "explanation" | "translation" | "ocr" | null;
 
 type TranslationEditorProps = {
   originalText: string;
@@ -23,6 +23,8 @@ type TranslationEditorProps = {
   onOriginalTextSelect: (text: string) => void;
   manualTranslation: string;
   onManualTranslationChange: (text: string) => void;
+  previousPanelText: string;
+  onPreviousPanelTextChange: (text: string) => void;
   aiTranslation: string;
   isAiTranslating: boolean;
   
@@ -49,6 +51,8 @@ export function TranslationEditor({
   onOriginalTextSelect,
   manualTranslation,
   onManualTranslationChange,
+  previousPanelText,
+  onPreviousPanelTextChange,
   aiTranslation,
   isAiTranslating,
   translator,
@@ -68,6 +72,7 @@ export function TranslationEditor({
 }: TranslationEditorProps) {
 
   const { toast } = useToast();
+  const wordCount = (manualTranslation.trim() === '') ? 0 : manualTranslation.trim().split(/\s+/).length;
 
   const handleOriginalTextSelect = (event: React.SyntheticEvent<HTMLTextAreaElement>) => {
     const textarea = event.currentTarget;
@@ -86,7 +91,7 @@ export function TranslationEditor({
     });
   };
 
-  const getButtonContent = (buttonType: Exclude<LoadingState, null>, icon: React.ReactNode, text: string) => {
+  const getButtonContent = (buttonType: Exclude<LoadingState, null | "ocr">, icon: React.ReactNode, text: string) => {
     if (isLoading === buttonType) {
       return (
         <>
@@ -104,7 +109,7 @@ export function TranslationEditor({
   };
 
   const hasAiContent = suggestion || context || explanation;
-  const isAssistantLoading = isLoading && ['suggestion', 'context', 'explanation'].includes(isLoading ?? '');
+  const isAssistantLoading = isLoading === "suggestion" || isLoading === "context" || isLoading === "explanation";
 
 
   return (
@@ -123,7 +128,7 @@ export function TranslationEditor({
                 value={originalText}
                 onChange={(e) => onOriginalTextChange(e.target.value)}
                 onSelect={handleOriginalTextSelect}
-                className="h-64 resize-none"
+                className="h-48 resize-none"
                 aria-label="Texto Original"
             />
             </div>
@@ -140,9 +145,12 @@ export function TranslationEditor({
                             placeholder="Escribe tu traducción aquí..."
                             value={manualTranslation}
                             onChange={(e) => onManualTranslationChange(e.target.value)}
-                            className="h-64 resize-none"
+                            className="h-48 resize-none"
                             aria-label="Tu Traducción"
                         />
+                         <div className="text-xs text-muted-foreground mt-2 text-right">
+                            {manualTranslation.length} caracteres | {wordCount} palabras
+                        </div>
                     </TabsContent>
                     <TabsContent value="ai" className="mt-2">
                     <Label htmlFor="ai-translated-text">Traducción Generada por IA</Label>
@@ -152,7 +160,7 @@ export function TranslationEditor({
                             placeholder="Haz clic en 'Traducir con IA' para generar una traducción..."
                             value={aiTranslation}
                             readOnly
-                            className="h-64 resize-none bg-muted/50"
+                            className="h-48 resize-none bg-muted/50"
                             aria-label="Traducción Generada por IA"
                         />
                         {isAiTranslating && (
@@ -172,22 +180,34 @@ export function TranslationEditor({
             </div>
         </div>
         
+        <div className="grid gap-2">
+            <Label htmlFor="previous-panel-text">Contexto del Panel Anterior (Opcional)</Label>
+            <Textarea
+                id="previous-panel-text"
+                placeholder="Añade texto del panel anterior para mejorar la precisión de la IA..."
+                value={previousPanelText}
+                onChange={(e) => onPreviousPanelTextChange(e.target.value)}
+                className="h-24 resize-none"
+                aria-label="Contexto del Panel Anterior"
+            />
+        </div>
+
         <div className="space-y-4 pt-2">
             <div className="flex items-center gap-4">
                 <Separator className="flex-1" />
                 <Label className="text-muted-foreground font-normal">Asistente de IA</Label>
                 <Separator className="flex-1" />
             </div>
-             <div className="min-h-[200px] rounded-lg border bg-card p-4">
+             <div className="min-h-[150px] rounded-lg border bg-card p-4">
                 {isAssistantLoading && (
-                  <div className="flex flex-col items-center justify-center p-8 text-center h-full">
+                  <div className="flex flex-col items-center justify-center p-6 text-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     <p className="mt-4 font-semibold">Obteniendo asistencia de la IA...</p>
                     <p className="text-sm text-muted-foreground">Esto puede tardar un momento.</p>
                   </div>
                 )}
                 {!isAssistantLoading && !hasAiContent && (
-                  <div className="text-center text-sm text-muted-foreground p-8 flex flex-col items-center justify-center h-full">
+                  <div className="text-center text-sm text-muted-foreground p-6 flex flex-col items-center justify-center h-full">
                      <Info className="h-10 w-10 mb-4 text-muted-foreground/50"/>
                     <span className="font-medium">La asistencia de IA aparecerá aquí.</span>
                     <span>Usa las herramientas de traducción para obtener ayuda de la IA.</span>
@@ -206,7 +226,7 @@ export function TranslationEditor({
                         <AccordionContent>
                           <div className="space-y-3 p-1">
                             <h4 className="font-semibold text-sm">Traducción Mejorada</h4>
-                            <p className="text-base p-3 bg-primary/10 border-l-4 border-primary rounded-r-md font-medium text-primary">{suggestion.improvedTranslation}</p>
+                            <p className="text-base p-3 bg-primary/10 border-l-4 border-primary rounded-r-md font-medium text-primary-foreground/90">{suggestion.improvedTranslation}</p>
                             <h4 className="font-semibold pt-2 text-sm">Explicación</h4>
                             <p className="text-sm text-muted-foreground">{suggestion.explanation}</p>
                           </div>

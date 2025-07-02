@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { Header } from "@/components/header";
 import { ImagePanel } from "@/components/image-panel";
 import { TranslationEditor } from "@/components/translation-editor";
@@ -18,7 +19,6 @@ import {
 } from "@/ai/flows/explain-phrase-context";
 import {
   translateText,
-  TranslateTextOutput,
 } from "@/ai/flows/translate-text";
 import { useToast } from "@/hooks/use-toast";
 import { extractTextFromImage } from "@/ai/flows/extract-text-from-image";
@@ -26,6 +26,7 @@ import { extractTextFromImage } from "@/ai/flows/extract-text-from-image";
 export default function Home() {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [originalText, setOriginalText] = useState("");
+  const [previousPanelText, setPreviousPanelText] = useState("");
   const [manualTranslation, setManualTranslation] = useState("");
   const [aiTranslation, setAiTranslation] = useState("");
   const [selectedText, setSelectedText] = useState("");
@@ -55,12 +56,7 @@ export default function Home() {
     const reader = new FileReader();
     reader.onload = (e) => {
       setImageSrc(e.target?.result as string);
-      // Reset all text fields on new image
-      setOriginalText("");
-      setManualTranslation("");
-      setAiTranslation("");
-      setSelectedText("");
-      clearAiOutputs();
+      // Do not reset text fields, user might want to keep context
     };
     reader.readAsDataURL(file);
   };
@@ -150,6 +146,7 @@ export default function Home() {
         originalText,
         translatedText: manualTranslation,
         context: "Una conversación amistosa entre dos personajes en un entorno moderno.",
+        previousContext: previousPanelText,
       });
       setAiSuggestion(result);
     } catch (error) {
@@ -178,7 +175,8 @@ export default function Home() {
     try {
       const result = await provideContextualUnderstanding({
         text: originalText,
-        image: imageSrc || undefined, // Pass image for better context
+        image: imageSrc || undefined,
+        previousContext: previousPanelText,
       });
       setAiContext(result);
     } catch (error) {
@@ -209,7 +207,8 @@ export default function Home() {
       const result = await explainPhraseContext({
         phrase: textToExplain,
         context: originalText,
-        image: imageSrc || undefined, // Pass image for better context
+        previousContext: previousPanelText,
+        image: imageSrc || undefined,
       });
       setAiExplanation(result);
     } catch (error) {
@@ -224,7 +223,7 @@ export default function Home() {
     }
   };
 
-  const handleExport = (format: 'txt' | 'srt') => {
+  const handleExport = (format: 'txt' | 'srt' | 'docx') => {
     let content = '';
     let mimeType = '';
     let filename = '';
@@ -247,17 +246,51 @@ export default function Home() {
         content = lines.map((line, index) => `${index + 1}\n00:00:0${index * 2},000 --> 00:00:0${index * 2 + 1},500\n${line}\n`).join('\n');
         mimeType = 'application/x-subrip';
         filename = 'traduccion.srt';
+    } else if (format === 'docx') {
+        const doc = new Document({
+            sections: [{
+                children: [
+                    new Paragraph({
+                        children: [new TextRun({ text: "Texto Original:", bold: true })],
+                    }),
+                    new Paragraph({
+                        text: originalText,
+                    }),
+                    new Paragraph({ text: "" }),
+                    new Paragraph({
+                        children: [new TextRun({ text: "Traducción:", bold: true })],
+                    }),
+                    new Paragraph({
+                        text: manualTranslation,
+                    }),
+                ],
+            }],
+        });
+
+        Packer.toBlob(doc).then(blob => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'traduccion.docx';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+        filename = 'traduccion.docx';
     }
 
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    if (format !== 'docx') {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
     
     toast({
         title: "Exportado",
@@ -276,6 +309,8 @@ export default function Home() {
             onOriginalTextSelect={setSelectedText}
             manualTranslation={manualTranslation}
             onManualTranslationChange={setManualTranslation}
+            previousPanelText={previousPanelText}
+            onPreviousPanelTextChange={setPreviousPanelText}
             aiTranslation={aiTranslation}
             isAiTranslating={isLoading === 'translation'}
             translator={translator}

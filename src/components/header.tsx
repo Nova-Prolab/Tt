@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 type HeaderProps = {
-  onExport: (format: 'txt' | 'srt') => void;
+  onExport: (format: 'txt' | 'srt' | 'docx') => void;
 }
 
 export function Header({ onExport }: HeaderProps) {
@@ -36,8 +36,8 @@ export function Header({ onExport }: HeaderProps) {
               <DropdownMenuItem onClick={() => onExport('srt')}>
                 como .srt
               </DropdownMenuItem>
-              <DropdownMenuItem disabled>
-                como .docx (próximamente)
+              <DropdownMenuItem onClick={() => onExport('docx')}>
+                como .docx
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -17,6 +17,10 @@ const ExplainPhraseContextInputSchema = z.object({
     .string()
     .optional()
     .describe('The surrounding context of the phrase in the panel.'),
+  previousContext: z
+    .string()
+    .optional()
+    .describe('Text from the previous panel for better context.'),
   image: z
     .string()
     .optional()
@@ -54,7 +58,10 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert in Manhwa culture and language. You will provide a detailed explanation of a specific phrase from a Manhwa panel, taking into account its context, cultural notes, and any visual cues from the image. The explanation must be in Spanish.
 
 Phrase: {{{phrase}}}
-Context: {{{context}}}
+Current Panel Context: {{{context}}}
+{{#if previousContext}}
+Previous Panel Context: {{{previousContext}}}
+{{/if}}
 {{#if image}}
 Image: {{media url=image}}
 {{/if}}

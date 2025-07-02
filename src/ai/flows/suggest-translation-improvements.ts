@@ -22,6 +22,10 @@ const SuggestTranslationImprovementsInputSchema = z.object({
     .string()
     .optional()
     .describe('Additional context about the Manhwa panel or scene.'),
+  previousContext: z
+    .string()
+    .optional()
+    .describe('Text from the previous panel for better context.'),
 });
 export type SuggestTranslationImprovementsInput = z.infer<
   typeof SuggestTranslationImprovementsInputSchema
@@ -54,7 +58,12 @@ Your task is to provide an improved translation and explain why the translation 
 
 Original Text: {{{originalText}}}
 Current Translation: {{{translatedText}}}
+{{#if context}}
 Context: {{{context}}}
+{{/if}}
+{{#if previousContext}}
+Previous Panel Text: {{{previousContext}}}
+{{/if}}
 
 Improved Translation:`, 
 });
