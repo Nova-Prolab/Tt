@@ -29,6 +29,7 @@ export default function Home() {
   const [aiTranslation, setAiTranslation] = useState("");
   const [selectedText, setSelectedText] = useState("");
   const [translator, setTranslator] = useState("gemini-flash");
+  const [targetLanguage, setTargetLanguage] = useState("Spanish");
   
   const [aiSuggestion, setAiSuggestion] =
     useState<SuggestTranslationImprovementsOutput | null>(null);
@@ -74,8 +75,8 @@ export default function Home() {
   const handleOcr = () => {
     if (!imageSrc) {
       toast({
-        title: "No Image",
-        description: "Please upload an image first.",
+        title: "No hay Imagen",
+        description: "Por favor, sube una imagen primero.",
         variant: "destructive",
       });
       return;
@@ -87,16 +88,16 @@ export default function Home() {
     clearAiOutputs();
     setAiTranslation("");
     toast({
-      title: "OCR Complete",
-      description: "Text extracted from image.",
+      title: "OCR Completado",
+      description: "Texto extraído de la imagen.",
     });
   };
 
   const handleAiTranslate = async () => {
     if (!originalText) {
       toast({
-        title: "Missing Original Text",
-        description: "Please provide the original text to translate.",
+        title: "Falta el Texto Original",
+        description: "Por favor, proporciona el texto original para traducir.",
         variant: "destructive",
       });
       return;
@@ -107,7 +108,7 @@ export default function Home() {
     try {
       const result = await translateText({
         text: originalText,
-        targetLanguage: "English",
+        targetLanguage: targetLanguage,
         sourceLanguage: "Korean",
         translator: translator,
       });
@@ -115,8 +116,8 @@ export default function Home() {
     } catch (error) {
       console.error(error);
       toast({
-        title: "AI Error",
-        description: "Failed to get AI translation.",
+        title: "Error de IA",
+        description: "No se pudo obtener la traducción de la IA.",
         variant: "destructive",
       });
     } finally {
@@ -127,8 +128,8 @@ export default function Home() {
   const handleSuggestImprovement = async () => {
     if (!originalText || !manualTranslation) {
       toast({
-        title: "Missing Text",
-        description: "Please provide both original and your translated text.",
+        title: "Falta Texto",
+        description: "Por favor, proporciona tanto el texto original como tu traducción.",
         variant: "destructive",
       });
       return;
@@ -139,14 +140,14 @@ export default function Home() {
       const result = await suggestTranslationImprovements({
         originalText,
         translatedText: manualTranslation,
-        context: "A friendly conversation between two characters in a modern setting.",
+        context: "Una conversación amistosa entre dos personajes en un entorno moderno.",
       });
       setAiSuggestion(result);
     } catch (error) {
       console.error(error);
       toast({
-        title: "AI Error",
-        description: "Failed to get suggestion.",
+        title: "Error de IA",
+        description: "No se pudo obtener la sugerencia.",
         variant: "destructive",
       });
     } finally {
@@ -157,8 +158,8 @@ export default function Home() {
   const handleGetContext = async () => {
     if (!originalText) {
       toast({
-        title: "Missing Text",
-        description: "Please provide the original text.",
+        title: "Falta Texto",
+        description: "Por favor, proporciona el texto original.",
         variant: "destructive",
       });
       return;
@@ -174,8 +175,8 @@ export default function Home() {
     } catch (error) {
       console.error(error);
       toast({
-        title: "AI Error",
-        description: "Failed to get context.",
+        title: "Error de IA",
+        description: "No se pudo obtener el contexto.",
         variant: "destructive",
       });
     } finally {
@@ -186,8 +187,8 @@ export default function Home() {
   const handleExplainPhrase = async () => {
     if (!selectedText) {
       toast({
-        title: "No Text Selected",
-        description: "Please select a phrase from the original text to explain.",
+        title: "Ningún Texto Seleccionado",
+        description: "Por favor, selecciona una frase del texto original para explicar.",
         variant: "destructive",
       });
       return;
@@ -204,8 +205,8 @@ export default function Home() {
     } catch (error) {
       console.error(error);
       toast({
-        title: "AI Error",
-        description: "Failed to get explanation.",
+        title: "Error de IA",
+        description: "No se pudo obtener la explicación.",
         variant: "destructive",
       });
     } finally {
@@ -220,22 +221,22 @@ export default function Home() {
 
     if (!originalText && !manualTranslation) {
         toast({
-            title: "Nothing to Export",
-            description: "Please add some text before exporting.",
+            title: "Nada que Exportar",
+            description: "Por favor, añade algo de texto antes de exportar.",
             variant: "destructive",
         });
         return;
     }
 
     if (format === 'txt') {
-        content = `Original:\n${originalText}\n\nTranslated:\n${manualTranslation}`;
+        content = `Original:\n${originalText}\n\nTraducido:\n${manualTranslation}`;
         mimeType = 'text/plain';
-        filename = 'translation.txt';
+        filename = 'traduccion.txt';
     } else if (format === 'srt') {
         const lines = manualTranslation.split('\n').filter(line => line.trim() !== '');
         content = lines.map((line, index) => `${index + 1}\n00:00:0${index * 2},000 --> 00:00:0${index * 2 + 1},500\n${line}\n`).join('\n');
         mimeType = 'application/x-subrip';
-        filename = 'translation.srt';
+        filename = 'traduccion.srt';
     }
 
     const blob = new Blob([content], { type: mimeType });
@@ -249,8 +250,8 @@ export default function Home() {
     URL.revokeObjectURL(url);
     
     toast({
-        title: "Exported",
-        description: `Translation exported as ${filename}`
+        title: "Exportado",
+        description: `Traducción exportada como ${filename}`
     })
   };
 
@@ -269,6 +270,8 @@ export default function Home() {
             isAiTranslating={isLoading === 'translation'}
             translator={translator}
             onTranslatorChange={setTranslator}
+            targetLanguage={targetLanguage}
+            onTargetLanguageChange={setTargetLanguage}
             onTranslate={handleAiTranslate}
             onSuggestImprovement={handleSuggestImprovement}
             onGetContext={handleGetContext}

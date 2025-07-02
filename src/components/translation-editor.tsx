@@ -28,6 +28,8 @@ type TranslationEditorProps = {
   
   translator: string;
   onTranslatorChange: (value: string) => void;
+  targetLanguage: string;
+  onTargetLanguageChange: (value: string) => void;
   onSuggestImprovement: () => void;
   onGetContext: () => void;
   onExplainPhrase: () => void;
@@ -51,6 +53,8 @@ export function TranslationEditor({
   isAiTranslating,
   translator,
   onTranslatorChange,
+  targetLanguage,
+  onTargetLanguageChange,
   onSuggestImprovement,
   onGetContext,
   onExplainPhrase,
@@ -77,8 +81,8 @@ export function TranslationEditor({
   const handleCopyToManual = () => {
     onManualTranslationChange(aiTranslation);
     toast({
-      title: "Copied to Manual Translation",
-      description: "You can now edit the AI translation.",
+      title: "Copiado a Traducción Manual",
+      description: "Ahora puedes editar la traducción de la IA.",
     });
   };
 
@@ -87,7 +91,7 @@ export function TranslationEditor({
       return (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Processing...
+          Procesando...
         </>
       );
     }
@@ -106,50 +110,50 @@ export function TranslationEditor({
   return (
     <Card className="flex flex-col h-full">
       <CardHeader>
-        <CardTitle>Translation Editor</CardTitle>
-        <CardDescription>Edit the OCR text, translate, and use AI tools to assist you.</CardDescription>
+        <CardTitle>Editor de Traducción</CardTitle>
+        <CardDescription>Edita el texto del OCR, traduce y usa las herramientas de IA para asistirte.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6 flex-1 pt-2">
         <div className="grid md:grid-cols-2 gap-6">
             <div className="grid gap-2">
-            <Label htmlFor="original-text">Original Text (from OCR)</Label>
+            <Label htmlFor="original-text">Texto Original (del OCR)</Label>
             <Textarea
                 id="original-text"
-                placeholder="Text from image will appear here..."
+                placeholder="El texto de la imagen aparecerá aquí..."
                 value={originalText}
                 onChange={(e) => onOriginalTextChange(e.target.value)}
                 onSelect={handleOriginalTextSelect}
                 className="h-64 resize-none"
-                aria-label="Original Text"
+                aria-label="Texto Original"
             />
             </div>
             <div className="grid gap-2">
                 <Tabs defaultValue="manual" className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="manual">Manual</TabsTrigger>
-                        <TabsTrigger value="ai">AI Translation</TabsTrigger>
+                        <TabsTrigger value="ai">Traducción IA</TabsTrigger>
                     </TabsList>
                     <TabsContent value="manual" className="mt-2">
-                        <Label htmlFor="translated-text">Your Translation</Label>
+                        <Label htmlFor="translated-text">Tu Traducción</Label>
                         <Textarea
                             id="translated-text"
-                            placeholder="Enter your translation here..."
+                            placeholder="Escribe tu traducción aquí..."
                             value={manualTranslation}
                             onChange={(e) => onManualTranslationChange(e.target.value)}
                             className="h-64 resize-none"
-                            aria-label="Your Translation"
+                            aria-label="Tu Traducción"
                         />
                     </TabsContent>
                     <TabsContent value="ai" className="mt-2">
-                    <Label htmlFor="ai-translated-text">AI Generated Translation</Label>
+                    <Label htmlFor="ai-translated-text">Traducción Generada por IA</Label>
                     <div className="relative">
                         <Textarea
                             id="ai-translated-text"
-                            placeholder="Click 'AI Translate' to generate a translation..."
+                            placeholder="Haz clic en 'Traducir con IA' para generar una traducción..."
                             value={aiTranslation}
                             readOnly
                             className="h-64 resize-none bg-muted/50"
-                            aria-label="AI Generated Translation"
+                            aria-label="Traducción Generada por IA"
                         />
                         {isAiTranslating && (
                             <div className="absolute inset-0 flex items-center justify-center bg-background/80">
@@ -160,7 +164,7 @@ export function TranslationEditor({
                     {aiTranslation && !isAiTranslating && (
                         <Button variant="outline" size="sm" className="mt-2" onClick={handleCopyToManual}>
                             <Copy className="mr-2 h-4 w-4" />
-                            Copy to Manual
+                            Copiar a Manual
                         </Button>
                     )}
                     </TabsContent>
@@ -171,22 +175,22 @@ export function TranslationEditor({
         <div className="space-y-4 pt-2">
             <div className="flex items-center gap-4">
                 <Separator className="flex-1" />
-                <Label className="text-muted-foreground font-normal">AI Assistant</Label>
+                <Label className="text-muted-foreground font-normal">Asistente de IA</Label>
                 <Separator className="flex-1" />
             </div>
              <div className="min-h-[200px] rounded-lg border bg-card p-4">
                 {isAssistantLoading && (
                   <div className="flex flex-col items-center justify-center p-8 text-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="mt-4 font-semibold">Getting AI assistance...</p>
-                    <p className="text-sm text-muted-foreground">This may take a moment.</p>
+                    <p className="mt-4 font-semibold">Obteniendo asistencia de la IA...</p>
+                    <p className="text-sm text-muted-foreground">Esto puede tardar un momento.</p>
                   </div>
                 )}
                 {!isAssistantLoading && !hasAiContent && (
                   <div className="text-center text-sm text-muted-foreground p-8 flex flex-col items-center justify-center h-full">
                      <Info className="h-10 w-10 mb-4 text-muted-foreground/50"/>
-                    <span className="font-medium">AI assistance will appear here.</span>
-                    <span>Use the translation tools to get AI-powered help.</span>
+                    <span className="font-medium">La asistencia de IA aparecerá aquí.</span>
+                    <span>Usa las herramientas de traducción para obtener ayuda de la IA.</span>
                   </div>
                 )}
                 {hasAiContent && !isAssistantLoading && (
@@ -196,14 +200,14 @@ export function TranslationEditor({
                         <AccordionTrigger>
                           <div className="flex items-center">
                             <Lightbulb className="mr-2 h-4 w-4 text-primary" />
-                            Improvement Suggestion
+                            Sugerencia de Mejora
                           </div>
                         </AccordionTrigger>
                         <AccordionContent>
                           <div className="space-y-3 p-1">
-                            <h4 className="font-semibold text-sm">Improved Translation</h4>
+                            <h4 className="font-semibold text-sm">Traducción Mejorada</h4>
                             <p className="text-base p-3 bg-primary/10 border-l-4 border-primary rounded-r-md font-medium text-primary-foreground/90">{suggestion.improvedTranslation}</p>
-                            <h4 className="font-semibold pt-2 text-sm">Explanation</h4>
+                            <h4 className="font-semibold pt-2 text-sm">Explicación</h4>
                             <p className="text-sm text-muted-foreground">{suggestion.explanation}</p>
                           </div>
                         </AccordionContent>
@@ -214,7 +218,7 @@ export function TranslationEditor({
                         <AccordionTrigger>
                             <div className="flex items-center">
                               <BookOpen className="mr-2 h-4 w-4 text-primary" />
-                              Contextual Understanding
+                              Comprensión Contextual
                             </div>
                         </AccordionTrigger>
                         <AccordionContent>
@@ -229,12 +233,12 @@ export function TranslationEditor({
                         <AccordionTrigger>
                           <div className="flex items-center">
                             <Info className="mr-2 h-4 w-4 text-primary" />
-                            Phrase Explanation
+                            Explicación de la Frase
                           </div>
                         </AccordionTrigger>
                         <AccordionContent>
                           <div className="space-y-2 p-1">
-                            <h4 className="font-semibold text-sm">Explanation for: <span className="italic font-normal p-1 bg-muted rounded-sm">"{selectedText}"</span></h4>
+                            <h4 className="font-semibold text-sm">Explicación para: <span className="italic font-normal p-1 bg-muted rounded-sm">"{selectedText}"</span></h4>
                             <p className="text-sm text-muted-foreground leading-relaxed pt-2">{explanation.explanation}</p>
                           </div>
                         </AccordionContent>
@@ -248,29 +252,41 @@ export function TranslationEditor({
       </CardContent>
       <CardFooter className="flex flex-wrap items-center justify-between gap-4 border-t pt-6">
         <div className="flex items-center gap-2 flex-wrap">
-            <Label htmlFor="translator-select" className="shrink-0">Translate with:</Label>
+            <Label htmlFor="translator-select" className="shrink-0">Traducir con:</Label>
             <Select value={translator} onValueChange={onTranslatorChange} disabled={!!isLoading}>
                 <SelectTrigger id="translator-select" className="w-auto min-w-[180px]">
-                    <SelectValue placeholder="Select a translator" />
+                    <SelectValue placeholder="Selecciona un traductor" />
                 </SelectTrigger>
                 <SelectContent>
                     <SelectItem value="google-translate">Google Translate</SelectItem>
-                    <SelectItem value="gemini-flash">AI (Gemini Flash)</SelectItem>
+                    <SelectItem value="gemini-flash">IA (Gemini Flash)</SelectItem>
                 </SelectContent>
             </Select>
+            <Label htmlFor="target-lang-select" className="shrink-0 ml-2">a:</Label>
+            <Select value={targetLanguage} onValueChange={onTargetLanguageChange} disabled={!!isLoading}>
+              <SelectTrigger id="target-lang-select" className="w-auto min-w-[140px]">
+                <SelectValue placeholder="Seleccionar idioma" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Spanish">Español</SelectItem>
+                <SelectItem value="English">Inglés</SelectItem>
+                <SelectItem value="Portuguese">Portugués</SelectItem>
+                <SelectItem value="French">Francés</SelectItem>
+              </SelectContent>
+            </Select>
             <Button onClick={onTranslate} disabled={!!isLoading} className="w-full sm:w-auto">
-                {getButtonContent("translation", <Languages className="mr-2 h-4 w-4" />, "AI Translate")}
+                {getButtonContent("translation", <Languages className="mr-2 h-4 w-4" />, "Traducir con IA")}
             </Button>
         </div>
         <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" onClick={onSuggestImprovement} disabled={!!isLoading}>
-                {getButtonContent("suggestion", <Lightbulb className="mr-2 h-4 w-4" />, "Suggest")}
+                {getButtonContent("suggestion", <Lightbulb className="mr-2 h-4 w-4" />, "Sugerir")}
             </Button>
             <Button size="sm" variant="outline" onClick={onExplainPhrase} disabled={!!isLoading || isExplainPhraseDisabled}>
-                {getButtonContent("explanation", <Info className="mr-2 h-4 w-4" />, "Explain")}
+                {getButtonContent("explanation", <Info className="mr-2 h-4 w-4" />, "Explicar")}
             </Button>
             <Button size="sm" variant="outline" onClick={onGetContext} disabled={!!isLoading}>
-                {getButtonContent("context", <BookOpen className="mr-2 h-4 w-4" />, "Context")}
+                {getButtonContent("context", <BookOpen className="mr-2 h-4 w-4" />, "Contexto")}
             </Button>
         </div>
     </CardFooter>

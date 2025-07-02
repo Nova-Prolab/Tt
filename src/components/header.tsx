@@ -26,18 +26,18 @@ export function Header({ onExport }: HeaderProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button>
-                <Download className="mr-2 h-4 w-4" /> Export
+                <Download className="mr-2 h-4 w-4" /> Exportar
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onExport('txt')}>
-                as .txt
+                como .txt
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onExport('srt')}>
-                as .srt
+                como .srt
               </DropdownMenuItem>
               <DropdownMenuItem disabled>
-                as .docx (coming soon)
+                como .docx (próximamente)
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
