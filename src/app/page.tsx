@@ -5,6 +5,7 @@ import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { Header } from "@/components/header";
 import { ImagePanel } from "@/components/image-panel";
 import { TranslationEditor } from "@/components/translation-editor";
+import { AiAssist } from "@/components/ai-assist";
 import {
   provideContextualUnderstanding,
   ProvideContextualUnderstandingOutput,
@@ -254,6 +255,14 @@ export default function Home() {
     }
   };
 
+  const handleApplySuggestion = (suggestionText: string) => {
+    setManualTranslation(suggestionText);
+    toast({
+      title: "Sugerencia Aplicada",
+      description: "La traducción mejorada se ha copiado al editor manual.",
+    });
+  };
+
   const handleCorrectSpelling = async () => {
     if (!manualTranslation) {
       toast({
@@ -366,7 +375,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-secondary/30">
       <Header onExport={handleExport} />
       <main className="flex-1 container mx-auto p-4 md:p-6 lg:p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           <TranslationEditor
             originalText={originalText}
             onOriginalTextChange={handleOriginalTextChange}
@@ -380,27 +389,32 @@ export default function Home() {
             targetLanguage={targetLanguage}
             onTargetLanguageChange={setTargetLanguage}
             onTranslate={handleAiTranslate}
-            onSuggestImprovement={handleSuggestImprovement}
-            onGetContext={handleGetContext}
-            onExplainPhrase={handleExplainPhrase}
-            onCorrectSpelling={handleCorrectSpelling}
-            isLoading={isLoading}
-            isExplainPhraseDisabled={!originalText && !selectedText}
-            suggestion={aiSuggestion}
-            context={aiContext}
-            explanation={aiExplanation}
-            selectedText={selectedText}
             onUndo={handleUndo}
             onRedo={handleRedo}
             canUndo={canUndo}
             canRedo={canRedo}
           />
-          <ImagePanel
-            imageSrc={imageSrc}
-            onImageUpload={handleImageUpload}
-            onOcr={handleOcr}
-            isOcrLoading={isLoading === 'ocr'}
-          />
+          <div className="flex flex-col gap-8">
+            <ImagePanel
+              imageSrc={imageSrc}
+              onImageUpload={handleImageUpload}
+              onOcr={handleOcr}
+              isOcrLoading={isLoading === 'ocr'}
+            />
+            <AiAssist
+              onSuggestImprovement={handleSuggestImprovement}
+              onGetContext={handleGetContext}
+              onExplainPhrase={handleExplainPhrase}
+              onCorrectSpelling={handleCorrectSpelling}
+              onApplySuggestion={handleApplySuggestion}
+              isLoading={isLoading}
+              isExplainPhraseDisabled={!originalText && !selectedText}
+              suggestion={aiSuggestion}
+              context={aiContext}
+              explanation={aiExplanation}
+              selectedText={selectedText || originalText}
+            />
+          </div>
         </div>
       </main>
     </div>
