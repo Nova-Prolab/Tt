@@ -332,11 +332,15 @@ export default function Home() {
   };
 
   const handleApplySfx = (sfxText: string) => {
-    const newText = manualTranslation ? `${manualTranslation} ${sfxText}` : sfxText;
+    // Formats the SFX according to the translator's convention.
+    const formattedSfx = `* ¡${sfxText.replace(/[¡!]/g, "")}!`;
+    
+    // Adds a space if there is existing text.
+    const newText = manualTranslation ? `${manualTranslation} ${formattedSfx}` : formattedSfx;
     setManualTranslation(newText);
     toast({
       title: "SFX Aplicado",
-      description: `"${sfxText}" se ha añadido a tu traducción.`,
+      description: `Se ha añadido "${formattedSfx}" a tu traducción.`,
     });
   };
 
