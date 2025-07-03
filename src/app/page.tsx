@@ -24,6 +24,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { extractTextFromImage } from "@/ai/flows/extract-text-from-image";
 import { correctSpelling } from "@/ai/flows/correct-spelling";
+import { analyzeTone, AnalyzeToneOutput } from "@/ai/flows/analyze-tone";
+import { translateSfx, TranslateSfxOutput } from "@/ai/flows/translate-sfx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Home() {
@@ -46,9 +48,11 @@ export default function Home() {
     useState<ProvideContextualUnderstandingOutput | null>(null);
   const [aiExplanation, setAiExplanation] = 
     useState<ExplainPhraseContextOutput | null>(null);
+  const [aiTone, setAiTone] = useState<AnalyzeToneOutput | null>(null);
+  const [aiSfx, setAiSfx] = useState<TranslateSfxOutput | null>(null);
 
   const [isLoading, setIsLoading] = useState<
-    "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | null
+    "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | "tone" | "sfx" | null
   >(null);
 
   const { toast } = useToast();
@@ -88,6 +92,8 @@ export default function Home() {
     setAiSuggestion(null);
     setAiContext(null);
     setAiExplanation(null);
+    setAiTone(null);
+    setAiSfx(null);
   }
 
   const handleImageUpload = (file: File) => {
@@ -256,11 +262,81 @@ export default function Home() {
     }
   };
 
+  const handleAnalyzeTone = async () => {
+    const textToAnalyze = selectedText || originalText;
+    if (!textToAnalyze) {
+      toast({
+        title: "No hay Texto para Analizar",
+        description: "Por favor, añade texto original o selecciona una frase.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsLoading("tone");
+    clearAiOutputs();
+    try {
+      const result = await analyzeTone({
+        text: textToAnalyze,
+        language: targetLanguage,
+      });
+      setAiTone(result);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error de IA",
+        description: "No se pudo analizar el tono.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  const handleTranslateSfx = async () => {
+    const textToTranslate = selectedText || originalText;
+    if (!textToTranslate) {
+      toast({
+        title: "No hay SFX para Traducir",
+        description: "Por favor, escribe o selecciona el efecto de sonido.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsLoading("sfx");
+    clearAiOutputs();
+    try {
+      const result = await translateSfx({
+        sfx: textToTranslate,
+        context: originalText,
+        language: targetLanguage,
+      });
+      setAiSfx(result);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error de IA",
+        description: "No se pudo traducir el SFX.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
   const handleApplySuggestion = (suggestionText: string) => {
     setManualTranslation(suggestionText);
     toast({
       title: "Sugerencia Aplicada",
       description: "La traducción mejorada se ha copiado al editor manual.",
+    });
+  };
+
+  const handleApplySfx = (sfxText: string) => {
+    const newText = manualTranslation ? `${manualTranslation} ${sfxText}` : sfxText;
+    setManualTranslation(newText);
+    toast({
+      title: "SFX Aplicado",
+      description: `"${sfxText}" se ha añadido a tu traducción.`,
     });
   };
 
@@ -414,12 +490,17 @@ export default function Home() {
                 onGetContext={handleGetContext}
                 onExplainPhrase={handleExplainPhrase}
                 onCorrectSpelling={handleCorrectSpelling}
+                onAnalyzeTone={handleAnalyzeTone}
+                onTranslateSfx={handleTranslateSfx}
                 onApplySuggestion={handleApplySuggestion}
+                onApplySfx={handleApplySfx}
                 isLoading={isLoading}
-                isExplainPhraseDisabled={!originalText && !selectedText}
+                isActionDisabled={!originalText && !selectedText}
                 suggestion={aiSuggestion}
                 context={aiContext}
                 explanation={aiExplanation}
+                tone={aiTone}
+                sfx={aiSfx}
                 selectedText={selectedText || originalText}
               />
             </TabsContent>

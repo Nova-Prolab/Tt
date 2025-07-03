@@ -7,3 +7,5 @@ import '@/ai/flows/explain-phrase-context.ts';
 import '@/ai/flows/translate-text.ts';
 import '@/ai/flows/extract-text-from-image.ts';
 import '@/ai/flows/correct-spelling.ts';
+import '@/ai/flows/analyze-tone.ts';
+import '@/ai/flows/translate-sfx.ts';

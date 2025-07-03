@@ -1,28 +1,36 @@
 "use client"
 
-import { Lightbulb, BookOpen, Info, Loader2, Wand2, Check } from "lucide-react"
+import { Lightbulb, BookOpen, Info, Loader2, Wand2, Check, Sparkles, Drama, Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { ProvideContextualUnderstandingOutput } from "@/ai/flows/provide-contextual-understanding"
 import type { SuggestTranslationImprovementsOutput } from "@/ai/flows/suggest-translation-improvements"
 import type { ExplainPhraseContextOutput } from "@/ai/flows/explain-phrase-context"
+import type { AnalyzeToneOutput } from "@/ai/flows/analyze-tone"
+import type { TranslateSfxOutput } from "@/ai/flows/translate-sfx"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Separator } from "@/components/ui/separator"
+import { useToast } from "@/hooks/use-toast"
 
-type LoadingState = "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | null;
+type LoadingState = "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | "tone" | "sfx" | null;
 
 type AiAssistProps = {
   onSuggestImprovement: () => void;
   onGetContext: () => void;
   onExplainPhrase: () => void;
   onCorrectSpelling: () => void;
+  onAnalyzeTone: () => void;
+  onTranslateSfx: () => void;
   onApplySuggestion: (suggestion: string) => void;
+  onApplySfx: (sfx: string) => void;
   isLoading: LoadingState;
-  isExplainPhraseDisabled: boolean;
+  isActionDisabled: boolean;
 
   suggestion: SuggestTranslationImprovementsOutput | null;
   context: ProvideContextualUnderstandingOutput | null;
   explanation: ExplainPhraseContextOutput | null;
+  tone: AnalyzeToneOutput | null;
+  sfx: TranslateSfxOutput | null;
   selectedText: string;
 }
 
@@ -31,16 +39,22 @@ export function AiAssist({
   onGetContext,
   onExplainPhrase,
   onCorrectSpelling,
+  onAnalyzeTone,
+  onTranslateSfx,
   onApplySuggestion,
+  onApplySfx,
   isLoading,
-  isExplainPhraseDisabled,
+  isActionDisabled,
   suggestion,
   context,
   explanation,
+  tone,
+  sfx,
   selectedText,
 }: AiAssistProps) {
+  const { toast } = useToast();
   
-  const getButtonContent = (buttonType: "suggestion" | "context" | "explanation" | "spelling", icon: React.ReactNode, text: string) => {
+  const getButtonContent = (buttonType: "suggestion" | "context" | "explanation" | "spelling" | "tone" | "sfx", icon: React.ReactNode, text: string) => {
     if (isLoading === buttonType) {
       return (
         <>
@@ -57,8 +71,16 @@ export function AiAssist({
     );
   };
 
-  const hasContent = suggestion || context || explanation;
-  const isAssistantLoading = isLoading === "suggestion" || isLoading === "context" || isLoading === "explanation";
+  const handleCopySfx = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "SFX Copiado",
+      description: `"${text}" se ha copiado a tu portapapeles.`,
+    });
+  }
+
+  const hasContent = suggestion || context || explanation || tone || sfx;
+  const isAssistantLoading = isLoading === "suggestion" || isLoading === "context" || isLoading === "explanation" || isLoading === "tone" || isLoading === "sfx";
 
   return (
     <Card className="h-full">
@@ -69,18 +91,24 @@ export function AiAssist({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <Button variant="outline" onClick={onCorrectSpelling} disabled={!!isLoading}>
-                {getButtonContent("spelling", <Wand2 className="mr-2 h-4 w-4" />, "Corregir Ortografía")}
+                {getButtonContent("spelling", <Wand2 className="mr-2 h-4 w-4" />, "Corregir")}
             </Button>
             <Button variant="outline" onClick={onSuggestImprovement} disabled={!!isLoading}>
-                {getButtonContent("suggestion", <Lightbulb className="mr-2 h-4 w-4" />, "Sugerir Mejora")}
+                {getButtonContent("suggestion", <Lightbulb className="mr-2 h-4 w-4" />, "Sugerir")}
             </Button>
             <Button variant="outline" onClick={onGetContext} disabled={!!isLoading}>
-                {getButtonContent("context", <BookOpen className="mr-2 h-4 w-4" />, "Obtener Contexto")}
+                {getButtonContent("context", <BookOpen className="mr-2 h-4 w-4" />, "Contexto")}
             </Button>
-            <Button variant="outline" onClick={onExplainPhrase} disabled={!!isLoading || isExplainPhraseDisabled}>
-                {getButtonContent("explanation", <Info className="mr-2 h-4 w-4" />, "Explicar Frase")}
+            <Button variant="outline" onClick={onExplainPhrase} disabled={!!isLoading || isActionDisabled}>
+                {getButtonContent("explanation", <Info className="mr-2 h-4 w-4" />, "Explicar")}
+            </Button>
+            <Button variant="outline" onClick={onAnalyzeTone} disabled={!!isLoading || isActionDisabled}>
+                {getButtonContent("tone", <Drama className="mr-2 h-4 w-4" />, "Analizar Tono")}
+            </Button>
+            <Button variant="outline" onClick={onTranslateSfx} disabled={!!isLoading || isActionDisabled}>
+                {getButtonContent("sfx", <Sparkles className="mr-2 h-4 w-4" />, "Traducir SFX")}
             </Button>
         </div>
 
@@ -102,7 +130,7 @@ export function AiAssist({
             </div>
           )}
           {hasContent && !isAssistantLoading && (
-            <Accordion type="single" collapsible className="w-full" defaultValue={suggestion ? "item-1" : context ? "item-2" : "item-3"}>
+            <Accordion type="single" collapsible className="w-full" defaultValue={suggestion ? "item-1" : context ? "item-2" : explanation ? "item-3" : tone ? "item-4" : sfx ? "item-5" : undefined}>
               {suggestion && (
                 <AccordionItem value="item-1">
                   <AccordionTrigger>
@@ -157,6 +185,54 @@ export function AiAssist({
                     </div>
                   </AccordionContent>
                 </AccordionItem>
+              )}
+              {tone && (
+                <AccordionItem value="item-4">
+                  <AccordionTrigger>
+                      <div className="flex items-center">
+                        <Drama className="mr-2 h-4 w-4 text-primary" />
+                        Análisis de Tono
+                      </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                      <div className="space-y-2 p-1">
+                          <h4 className="font-semibold text-sm">Tono Identificado: <span className="text-base font-bold text-primary p-1 rounded-sm">{tone.tone}</span></h4>
+                          <p className="text-sm text-muted-foreground leading-relaxed pt-2">{tone.explanation}</p>
+                      </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+              {sfx && (
+                  <AccordionItem value="item-5">
+                  <AccordionTrigger>
+                      <div className="flex items-center">
+                        <Sparkles className="mr-2 h-4 w-4 text-primary" />
+                        Sugerencias de SFX
+                      </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                      <div className="space-y-2 p-1">
+                          <h4 className="font-semibold text-sm">Sugerencias para: <span className="italic font-normal p-1 bg-muted rounded-sm">"{selectedText}"</span></h4>
+                          <ul className="space-y-2 pt-2">
+                            {sfx.suggestions.map((suggestion, index) => (
+                              <li key={index} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+                                <span className="font-medium">{suggestion}</span>
+                                <div className="flex gap-1">
+                                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopySfx(suggestion)}>
+                                      <Copy className="h-3.5 w-3.5" />
+                                      <span className="sr-only">Copiar</span>
+                                   </Button>
+                                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onApplySfx(suggestion)}>
+                                      <Check className="h-4 w-4" />
+                                      <span className="sr-only">Aplicar</span>
+                                   </Button>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                      </div>
+                  </AccordionContent>
+                  </AccordionItem>
               )}
             </Accordion>
           )}
