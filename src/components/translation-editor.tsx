@@ -84,7 +84,6 @@ export function TranslationEditor({
     <Card className="flex flex-col h-full">
       <CardHeader>
         <CardTitle>Editor de Traducción</CardTitle>
-        <CardDescription>Edita el texto del OCR, traduce y organiza tu trabajo.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6 flex-1 pt-2">
         <div className="grid md:grid-cols-1 gap-6">

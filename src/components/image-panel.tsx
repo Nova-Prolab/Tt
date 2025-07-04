@@ -102,7 +102,6 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
     <Card className="flex flex-col h-full">
       <CardHeader>
         <CardTitle>Panel del Manhwa</CardTitle>
-        <CardDescription>Sube una imagen grande, explórala con el scroll, selecciona un área y extrae su texto sin pérdida de calidad.</CardDescription>
       </CardHeader>
       <CardContent className={cn(
         "flex-1 flex justify-center rounded-lg border min-h-[400px] transition-colors",
