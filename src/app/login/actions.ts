@@ -17,7 +17,7 @@ export async function login(prevState: any, formData: FormData) {
       sameSite: 'strict',
       maxAge: 60 * 60 * 24, // 1 day
     });
-    redirect('/');
+    return { success: true };
   } else {
     return { error: 'Usuario o contraseña incorrectos.' };
   }

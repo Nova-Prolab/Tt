@@ -10,6 +10,7 @@ import { BookMarked, Loader2 } from 'lucide-react';
 import { useEffect, useActionState, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 function SubmitButton() {
     const { pending } = useFormStatus();
@@ -24,6 +25,7 @@ function SubmitButton() {
 export default function LoginPage() {
     const [state, formAction] = useActionState(login, undefined);
     const { toast } = useToast();
+    const router = useRouter();
     const [shaking, setShaking] = useState<string | null>(null);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, name: 'username' | 'password') => {
@@ -41,7 +43,10 @@ export default function LoginPage() {
                 variant: 'destructive',
             });
         }
-    }, [state, toast]);
+        if (state?.success) {
+            router.push('/');
+        }
+    }, [state, toast, router]);
 
     return (
         <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-4">
