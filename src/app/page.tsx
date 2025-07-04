@@ -39,7 +39,7 @@ export default function Home() {
 
   const [aiTranslation, setAiTranslation] = useState("");
   const [selectedText, setSelectedText] = useState("");
-  const [translator, setTranslator] = useState("gemini-flash");
+  const [translator, setTranslator] = useState("gemini");
   const [targetLanguage, setTargetLanguage] = useState("Spanish");
   
   const [aiSuggestion, setAiSuggestion] =
