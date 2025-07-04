@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import ReactCrop, {
   type Crop,
   type PixelCrop,
@@ -27,6 +27,13 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [isSfx, setIsSfx] = useState(false);
+  const [croppedImageForOcr, setCroppedImageForOcr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOcrLoading && croppedImageForOcr) {
+        setCroppedImageForOcr(null);
+    }
+  }, [isOcrLoading, croppedImageForOcr]);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -36,8 +43,9 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
     const file = event.target.files?.[0];
     if (file) {
       onImageUpload(file);
-      setCrop(undefined); // Reset crop on new image
+      setCrop(undefined);
       setCompletedCrop(undefined);
+      setCroppedImageForOcr(null);
     }
   };
 
@@ -62,8 +70,7 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       });
       return;
     }
-
-    // Use the image's rendered dimensions directly to avoid issues with scrolling containers.
+    
     const { naturalWidth, naturalHeight, width: renderedWidth, height: renderedHeight } = image;
     
     if (renderedWidth === 0 || renderedHeight === 0) {
@@ -94,9 +101,10 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
     );
     
     const croppedImageDataUrl = canvas.toDataURL('image/png', 1.0);
+    
+    setCroppedImageForOcr(croppedImageDataUrl);
     onOcr(croppedImageDataUrl, isSfx);
 
-    // Reset state for next extraction
     setIsSfx(false);
     setCrop(undefined);
     setCompletedCrop(undefined);
@@ -109,11 +117,26 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       </CardHeader>
       <CardContent className={cn(
         "relative flex-1 flex justify-center rounded-lg border min-h-[400px] transition-colors",
-        imageSrc
+        (imageSrc && !croppedImageForOcr)
           ? "overflow-y-auto bg-card p-0"
           : "items-center border-dashed bg-muted/30"
         )}>
-        {imageSrc ? (
+        {croppedImageForOcr ? (
+            <div className="flex justify-center items-center w-full h-full p-4">
+                 <img
+                    src={croppedImageForOcr}
+                    alt="Recorte para OCR"
+                    className="max-w-full max-h-full object-contain"
+                />
+                {isOcrLoading && (
+                    <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center text-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="mt-4 font-semibold">Extrayendo texto del recorte...</p>
+                        <p className="text-sm text-muted-foreground">Este proceso volverá a la imagen completa al terminar.</p>
+                    </div>
+                )}
+            </div>
+        ) : imageSrc ? (
           <>
             <ReactCrop
               crop={crop}
@@ -129,7 +152,7 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
                 data-ai-hint="manhwa page"
               />
             </ReactCrop>
-            {completedCrop?.width && completedCrop?.height && (
+            {completedCrop?.width && completedCrop?.height && !isOcrLoading && (
               <div
                 className="absolute z-10 flex items-center gap-2 animate-in fade-in"
                 style={{
@@ -151,11 +174,7 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
                     onClick={handleExtractText}
                     disabled={isOcrLoading}
                 >
-                    {isOcrLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
                     <ScanText className="mr-2 h-4 w-4" />
-                    )}
                     Extraer Texto
                 </Button>
               </div>
