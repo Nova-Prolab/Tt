@@ -1,7 +1,14 @@
+
 "use client"
 
-import { Lightbulb, BookOpen, Info, Loader2, Wand2, Check, Sparkles, Drama, Copy, ClipboardList, Handshake, BarChartHorizontal } from "lucide-react"
+import { Lightbulb, BookOpen, Info, Loader2, Wand2, Check, Sparkles, Drama, Copy, ClipboardList, Handshake, BarChartHorizontal, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { ProvideContextualUnderstandingOutput } from "@/ai/flows/provide-contextual-understanding"
 import type { SuggestTranslationImprovementsOutput } from "@/ai/flows/suggest-translation-improvements"
@@ -75,23 +82,6 @@ export function AiAssist({
   originalText,
 }: AiAssistProps) {
   const { toast } = useToast();
-  
-  const getButtonContent = (buttonType: "suggestion" | "context" | "explanation" | "spelling" | "tone" | "sfx" | "alternatives" | "formality" | "quality", icon: React.ReactNode, text: string) => {
-    if (isLoading === buttonType) {
-      return (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Procesando...
-        </>
-      );
-    }
-    return (
-      <>
-        {icon}
-        {text}
-      </>
-    );
-  };
 
   const handleCopySfx = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -113,35 +103,77 @@ export function AiAssist({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <Button variant="outline" onClick={onCorrectSpelling} disabled={!!isLoading}>
-                {getButtonContent("spelling", <Wand2 className="mr-2 h-4 w-4" />, "Corregir")}
-            </Button>
-            <Button variant="outline" onClick={onSuggestImprovement} disabled={!!isLoading || isQualityCheckDisabled}>
-                {getButtonContent("suggestion", <Lightbulb className="mr-2 h-4 w-4" />, "Sugerir")}
-            </Button>
-            <Button variant="outline" onClick={onGetContext} disabled={!!isLoading}>
-                {getButtonContent("context", <BookOpen className="mr-2 h-4 w-4" />, "Contexto")}
-            </Button>
-            <Button variant="outline" onClick={onExplainPhrase} disabled={!!isLoading || isActionDisabled}>
-                {getButtonContent("explanation", <Info className="mr-2 h-4 w-4" />, "Explicar")}
-            </Button>
-            <Button variant="outline" onClick={onAnalyzeTone} disabled={!!isLoading || isActionDisabled}>
-                {getButtonContent("tone", <Drama className="mr-2 h-4 w-4" />, "Analizar Tono")}
-            </Button>
-            <Button variant="outline" onClick={onTranslateSfx} disabled={!!isLoading || !originalText}>
-                {getButtonContent("sfx", <Sparkles className="mr-2 h-4 w-4" />, "Traducir SFX")}
-            </Button>
-            <Button variant="outline" onClick={onGenerateAlternatives} disabled={!!isLoading || isActionDisabled}>
-                {getButtonContent("alternatives", <ClipboardList className="mr-2 h-4 w-4" />, "Alternativas")}
-            </Button>
-            <Button variant="outline" onClick={onAnalyzeFormality} disabled={!!isLoading || isActionDisabled}>
-                {getButtonContent("formality", <Handshake className="mr-2 h-4 w-4" />, "Formalidad")}
-            </Button>
-            <Button variant="outline" onClick={onAnalyzeQuality} disabled={!!isLoading || isQualityCheckDisabled} className="col-span-full">
-                {getButtonContent("quality", <BarChartHorizontal className="mr-2 h-4 w-4" />, "Analizar Calidad")}
-            </Button>
+        <div className="flex flex-wrap gap-2">
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" disabled={!!isLoading}>
+                        Editar y Generar
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={onCorrectSpelling} disabled={!!isLoading}>
+                        <Wand2 className="mr-2 h-4 w-4"/>
+                        <span>Corregir Ortografía</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={onSuggestImprovement} disabled={!!isLoading || isQualityCheckDisabled}>
+                        <Lightbulb className="mr-2 h-4 w-4"/>
+                        <span>Sugerir Mejora</span>
+                    </DropdownMenuItem>
+                     <DropdownMenuItem onClick={onGenerateAlternatives} disabled={!!isLoading || isActionDisabled}>
+                        <ClipboardList className="mr-2 h-4 w-4"/>
+                        <span>Generar Alternativas</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={onTranslateSfx} disabled={!!isLoading || !originalText}>
+                        <Sparkles className="mr-2 h-4 w-4"/>
+                        <span>Traducir SFX</span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" disabled={!!isLoading}>
+                        Analizar y Calificar
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={onAnalyzeTone} disabled={!!isLoading || isActionDisabled}>
+                        <Drama className="mr-2 h-4 w-4"/>
+                        <span>Analizar Tono</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={onAnalyzeFormality} disabled={!!isLoading || isActionDisabled}>
+                        <Handshake className="mr-2 h-4 w-4"/>
+                        <span>Analizar Formalidad</span>
+                    </DropdownMenuItem>
+                     <DropdownMenuItem onClick={onAnalyzeQuality} disabled={!!isLoading || isQualityCheckDisabled}>
+                        <BarChartHorizontal className="mr-2 h-4 w-4"/>
+                        <span>Analizar Calidad de Traducción</span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+                 <DropdownMenuTrigger asChild>
+                    <Button variant="outline" disabled={!!isLoading}>
+                        Comprender y Explicar
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={onGetContext} disabled={!!isLoading}>
+                        <BookOpen className="mr-2 h-4 w-4"/>
+                        <span>Obtener Contexto del Panel</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={onExplainPhrase} disabled={!!isLoading || isActionDisabled}>
+                        <Info className="mr-2 h-4 w-4"/>
+                        <span>Explicar Frase Seleccionada</span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </div>
+
 
         <Separator/>
 
@@ -360,3 +392,5 @@ export function AiAssist({
     </Card>
   )
 }
+
+    
