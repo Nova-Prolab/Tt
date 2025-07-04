@@ -71,31 +71,27 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       return;
     }
     
-    // The previous logic using renderedHeight was unreliable for very tall images in scroll containers.
-    // This new logic calculates a single, uniform scale based on the rendered width and natural width,
-    // which is more robust because `w-full h-auto` preserves the aspect ratio.
-    const { naturalWidth, width: renderedWidth } = image;
+    // The definitive fix for very tall images.
+    // We can't trust the browser's reported "rendered height" for tall images in scroll
+    // containers. Instead, we calculate a single, reliable scale based on the width,
+    // which is constrained by CSS. Since `h-auto` preserves the aspect ratio, this
+    // scale is correct for both axes.
+    const scale = image.naturalWidth / image.width;
     
-    if (renderedWidth === 0) {
-        toast({
-            title: "Error de Imagen",
-            description: "No se pudieron determinar las dimensiones de la imagen. Inténtalo de nuevo.",
-            variant: "destructive",
-        });
-        return;
-    }
+    const sourceX = completedCrop.x * scale;
+    const sourceY = completedCrop.y * scale;
+    const sourceWidth = completedCrop.width * scale;
+    const sourceHeight = completedCrop.height * scale;
 
-    const scale = naturalWidth / renderedWidth;
-    
-    canvas.width = Math.floor(completedCrop.width * scale);
-    canvas.height = Math.floor(completedCrop.height * scale);
+    canvas.width = Math.floor(sourceWidth);
+    canvas.height = Math.floor(sourceHeight);
 
     ctx.drawImage(
       image,
-      Math.floor(completedCrop.x * scale),
-      Math.floor(completedCrop.y * scale),
-      Math.floor(completedCrop.width * scale),
-      Math.floor(completedCrop.height * scale),
+      Math.floor(sourceX),
+      Math.floor(sourceY),
+      Math.floor(sourceWidth),
+      Math.floor(sourceHeight),
       0,
       0,
       canvas.width,
