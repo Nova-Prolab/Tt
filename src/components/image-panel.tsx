@@ -9,7 +9,7 @@ import 'react-image-crop/dist/ReactCrop.css'
 
 import { UploadCloud, ScanText, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
@@ -104,26 +104,47 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
         <CardTitle>Panel del Manhwa</CardTitle>
       </CardHeader>
       <CardContent className={cn(
-        "flex-1 flex justify-center rounded-lg border min-h-[400px] transition-colors",
+        "relative flex-1 flex justify-center rounded-lg border min-h-[400px] transition-colors",
         imageSrc
           ? "overflow-y-auto bg-card p-0"
           : "items-center border-dashed bg-muted/30"
         )}>
         {imageSrc ? (
-          <ReactCrop
-            crop={crop}
-            onChange={c => setCrop(c)}
-            onComplete={(c) => setCompletedCrop(c)}
-            aspect={undefined}
-          >
-            <img
-              ref={imgRef}
-              alt="Panel del Manhwa para recortar"
-              src={imageSrc}
-              className="w-full h-auto"
-              data-ai-hint="manhwa page"
-            />
-          </ReactCrop>
+          <>
+            <ReactCrop
+              crop={crop}
+              onChange={c => setCrop(c)}
+              onComplete={(c) => setCompletedCrop(c)}
+              aspect={undefined}
+            >
+              <img
+                ref={imgRef}
+                alt="Panel del Manhwa para recortar"
+                src={imageSrc}
+                className="w-full h-auto"
+                data-ai-hint="manhwa page"
+              />
+            </ReactCrop>
+            {completedCrop?.width && completedCrop?.height && (
+              <Button
+                onClick={handleExtractText}
+                disabled={isOcrLoading}
+                className="absolute z-10 animate-in fade-in"
+                style={{
+                  top: `${completedCrop.y + completedCrop.height + 8}px`,
+                  left: `${completedCrop.x + completedCrop.width / 2}px`,
+                  transform: 'translateX(-50%)',
+                }}
+              >
+                {isOcrLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <ScanText className="mr-2 h-4 w-4" />
+                )}
+                Extraer Texto
+              </Button>
+            )}
+          </>
         ) : (
           <div className="text-center text-muted-foreground p-8 flex flex-col items-center">
             <UploadCloud className="mx-auto h-12 w-12" />
@@ -142,14 +163,6 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       <CardFooter className="flex justify-end gap-2 pt-6">
         <Button variant="outline" onClick={handleUploadClick}>
           <UploadCloud className="mr-2 h-4 w-4" /> Subir Imagen
-        </Button>
-        <Button onClick={handleExtractText} disabled={!completedCrop || !imageSrc || isOcrLoading}>
-          {isOcrLoading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <ScanText className="mr-2 h-4 w-4" />
-          )}
-          Extraer Texto de Selección
         </Button>
       </CardFooter>
     </Card>
