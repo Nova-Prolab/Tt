@@ -63,8 +63,8 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       return;
     }
 
-    const { width: renderedWidth, height: renderedHeight } = image.getBoundingClientRect();
-    const { naturalWidth, naturalHeight } = image;
+    // Use the image's rendered dimensions directly to avoid issues with scrolling containers.
+    const { naturalWidth, naturalHeight, width: renderedWidth, height: renderedHeight } = image;
     
     if (renderedWidth === 0 || renderedHeight === 0) {
         toast({
@@ -78,15 +78,15 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
     const scaleX = naturalWidth / renderedWidth;
     const scaleY = naturalHeight / renderedHeight;
     
-    canvas.width = Math.floor(completedCrop.width * scaleX);
-    canvas.height = Math.floor(completedCrop.height * scaleY);
+    canvas.width = Math.round(completedCrop.width * scaleX);
+    canvas.height = Math.round(completedCrop.height * scaleY);
 
     ctx.drawImage(
       image,
-      completedCrop.x * scaleX,
-      completedCrop.y * scaleY,
-      completedCrop.width * scaleX,
-      completedCrop.height * scaleY,
+      Math.round(completedCrop.x * scaleX),
+      Math.round(completedCrop.y * scaleY),
+      Math.round(completedCrop.width * scaleX),
+      Math.round(completedCrop.height * scaleY),
       0,
       0,
       canvas.width,
@@ -95,8 +95,12 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
     
     const croppedImageDataUrl = canvas.toDataURL('image/png', 1.0);
     onOcr(croppedImageDataUrl, isSfx);
+
+    // Reset state for next extraction
     setIsSfx(false);
-  }
+    setCrop(undefined);
+    setCompletedCrop(undefined);
+  };
 
   return (
     <Card className="flex flex-col h-full">
