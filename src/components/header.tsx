@@ -1,6 +1,6 @@
 "use client"
 
-import { BookMarked, Download } from "lucide-react"
+import { BookMarked, Download, LogOut } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { logout } from "@/app/login/actions"
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type HeaderProps = {
   onExport: (format: 'txt' | 'srt' | 'docx') => void;
@@ -42,6 +44,21 @@ export function Header({ onExport }: HeaderProps) {
             </DropdownMenuContent>
           </DropdownMenu>
           <ThemeToggle />
+           <form action={logout}>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" type="submit">
+                            <LogOut className="h-5 w-5" />
+                            <span className="sr-only">Cerrar sesión</span>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Cerrar sesión</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+          </form>
         </div>
       </div>
     </header>
