@@ -32,6 +32,7 @@ type AiAssistProps = {
   tone: AnalyzeToneOutput | null;
   sfx: TranslateSfxOutput | null;
   selectedText: string;
+  originalText: string;
 }
 
 export function AiAssist({
@@ -51,6 +52,7 @@ export function AiAssist({
   tone,
   sfx,
   selectedText,
+  originalText,
 }: AiAssistProps) {
   const { toast } = useToast();
   
@@ -107,7 +109,7 @@ export function AiAssist({
             <Button variant="outline" onClick={onAnalyzeTone} disabled={!!isLoading || isActionDisabled}>
                 {getButtonContent("tone", <Drama className="mr-2 h-4 w-4" />, "Analizar Tono")}
             </Button>
-            <Button variant="outline" onClick={onTranslateSfx} disabled={!!isLoading || isActionDisabled}>
+            <Button variant="outline" onClick={onTranslateSfx} disabled={!!isLoading || !originalText}>
                 {getButtonContent("sfx", <Sparkles className="mr-2 h-4 w-4" />, "Traducir SFX")}
             </Button>
         </div>
@@ -202,7 +204,7 @@ export function AiAssist({
                   </AccordionContent>
                 </AccordionItem>
               )}
-              {sfx && (
+              {sfx && sfx.sfxTranslations.length > 0 && (
                   <AccordionItem value="item-5">
                   <AccordionTrigger>
                       <div className="flex items-center">
@@ -211,25 +213,30 @@ export function AiAssist({
                       </div>
                   </AccordionTrigger>
                   <AccordionContent>
-                      <div className="space-y-2 p-1">
-                          <h4 className="font-semibold text-sm">Sugerencias para: <span className="italic font-normal p-1 bg-muted rounded-sm">"{selectedText}"</span></h4>
-                          <ul className="space-y-2 pt-2">
-                            {sfx.suggestions.map((suggestion, index) => (
-                              <li key={index} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
-                                <span className="font-medium">{suggestion}</span>
-                                <div className="flex gap-1">
-                                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopySfx(suggestion)}>
-                                      <Copy className="h-3.5 w-3.5" />
-                                      <span className="sr-only">Copiar</span>
-                                   </Button>
-                                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onApplySfx(suggestion)}>
-                                      <Check className="h-4 w-4" />
-                                      <span className="sr-only">Aplicar</span>
-                                   </Button>
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
+                      <div className="space-y-4 p-1">
+                          {sfx.sfxTranslations.map((sfxGroup, groupIndex) => (
+                            <div key={groupIndex}>
+                                <h4 className="font-semibold text-sm">Sugerencias para: <span className="italic font-normal p-1 bg-muted rounded-sm">"{sfxGroup.originalSfx}"</span></h4>
+                                <ul className="space-y-2 pt-2">
+                                {sfxGroup.suggestions.map((suggestion, suggestionIndex) => (
+                                    <li key={suggestionIndex} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+                                    <span className="font-medium">{suggestion}</span>
+                                    <div className="flex gap-1">
+                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopySfx(suggestion)}>
+                                            <Copy className="h-3.5 w-3.5" />
+                                            <span className="sr-only">Copiar</span>
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onApplySfx(suggestion)}>
+                                            <Check className="h-4 w-4" />
+                                            <span className="sr-only">Aplicar</span>
+                                        </Button>
+                                    </div>
+                                    </li>
+                                ))}
+                                </ul>
+                                {groupIndex < sfx.sfxTranslations.length - 1 && <Separator className="mt-4"/>}
+                            </div>
+                          ))}
                       </div>
                   </AccordionContent>
                   </AccordionItem>

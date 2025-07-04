@@ -300,11 +300,10 @@ export default function Home() {
   };
 
   const handleTranslateSfx = async () => {
-    const textToTranslate = selectedText || originalText;
-    if (!textToTranslate) {
+    if (!originalText) {
       toast({
-        title: "No hay SFX para Traducir",
-        description: "Por favor, escribe o selecciona el efecto de sonido.",
+        title: "No hay Texto Original",
+        description: "Por favor, añade el texto original que contiene los SFX.",
         variant: "destructive",
       });
       return;
@@ -313,8 +312,7 @@ export default function Home() {
     clearAiOutputs();
     try {
       const result = await translateSfx({
-        sfx: textToTranslate,
-        context: originalText,
+        text: originalText,
         language: targetLanguage,
       });
       setAiSfx(result);
@@ -513,6 +511,7 @@ export default function Home() {
                 tone={aiTone}
                 sfx={aiSfx}
                 selectedText={selectedText || originalText}
+                originalText={originalText}
               />
             </TabsContent>
           </Tabs>
