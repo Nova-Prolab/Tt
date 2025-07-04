@@ -337,8 +337,7 @@ export default function Home() {
   };
 
   const handleApplySfx = (sfxText: string) => {
-    // Formats the SFX according to the translator's convention.
-    const formattedSfx = `* ¡${sfxText.replace(/[¡!]/g, "")}!`;
+    const formattedSfx = `*${sfxText}*`;
     
     // Adds a space if there is existing text.
     const newText = manualTranslation ? `${manualTranslation} ${formattedSfx}` : formattedSfx;
