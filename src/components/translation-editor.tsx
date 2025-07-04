@@ -12,35 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
-const GeminiLogo = () => (
-    <svg fill="currentColor" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
-      <defs>
-        <linearGradient id="gemini-a" x1="129.23" x2="129.23" y1="103.14" y2="189.68" gradientUnits="userSpaceOnUse"><stop stop-color="#8E83EE"></stop><stop offset="1" stop-color="#5448C8"></stop></linearGradient>
-        <linearGradient id="gemini-b" x1="126.77" x2="126.77" y1="118.3" y2="204.84" gradientUnits="userSpaceOnUse"><stop stop-color="#C6B9FF"></stop><stop offset="1" stop-color="#8E83EE"></stop></linearGradient>
-        <linearGradient id="gemini-c" x1="105.74" x2="105.74" y1="102.63" y2="209.84" gradientUnits="userSpaceOnUse"><stop stop-color="#50A6FF"></stop><stop offset="1" stop-color="#1579F2"></stop></linearGradient>
-        <linearGradient id="gemini-d" x1="150.26" x2="150.26" y1="87.47" y2="194.68" gradientUnits="userSpaceOnUse"><stop stop-color="#83EAF1"></stop><stop offset="1" stop-color="#3C8CE7"></stop></linearGradient>
-      </defs>
-      <path d="M128 256A128 128 0 1 1 128 0a128 128 0 0 1 0 256z" fill="#000" opacity="0.2"></path>
-      <path d="M220.41 174.61a127.34 127.34 0 0 0-14-20.33l-50.64-50.62a36.21 36.21 0 0 0-51.15 0L54 154.28a127.24 127.24 0 0 0-14 20.33l-3.37 5.17a6.52 6.52 0 0 0 5.48 9.9h176.2a6.52 6.52 0 0 0 5.48-9.9z" fill="url(#gemini-a)"></path>
-      <path d="M104.63 103.66a36.21 36.21 0 0 1 51.15 0l50.64 50.62a127.34 127.34 0 0 0 14-20.33l3.37-5.17a6.52 6.52 0 0 0-5.48-9.9H57.75a6.52 6.52 0 0 0-5.48 9.9l3.37 5.17a127.24 127.24 0 0 0 14 20.33z" fill="url(#gemini-b)"></path>
-      <path d="m155.78 154.28-51.15-51.14a36.21 36.21 0 0 0-51.15 0l-17.9 17.9a127.38 127.38 0 0 0 18.67 21.65l3.37 5.17a6.52 6.52 0 0 0 5.48 9.9h59.16z" fill="url(#gemini-c)"></path>
-      <path d="m100.22 103.14 51.15 51.14a36.21 36.21 0 0 0 51.15 0l17.9-17.9a127.38 127.38 0 0 0-18.67-21.65l-3.37-5.17a6.52 6.52 0 0 0-5.48-9.9H93.72z" fill="url(#gemini-d)"></path>
-    </svg>
-);
-
-const DeepseekLogo = () => (
-    <svg fill="currentColor" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
-      <defs>
-        <linearGradient id="deepseek-a" x1="512" x2="512" y1="0" y2="1024" gradientUnits="userSpaceOnUse"><stop stop-color="#247CFF"></stop><stop offset="1" stop-color="#0E58BE"></stop></linearGradient>
-        <linearGradient id="deepseek-b" x1="512" x2="512" y1="192" y2="832" gradientUnits="userSpaceOnUse"><stop stop-color="#00A4FF"></stop><stop offset="1" stop-color="#0085FF"></stop></linearGradient>
-        <linearGradient id="deepseek-c" x1="512" x2="512" y1="384" y2="640" gradientUnits="userSpaceOnUse"><stop stop-color="#00D1FF"></stop><stop offset="1" stop-color="#00E0FF"></stop></linearGradient>
-      </defs>
-      <path d="M512 1024a512 512 0 1 1 512-512 512 512 0 0 1-512 512m0-896a384 384 0 1 0 384 384A384 384 0 0 0 512 128" fill="url(#deepseek-a)"></path>
-      <path d="M512 832a320 320 0 1 1 320-320 320 320 0 0 1-320 320m0-512a192 192 0 1 0 192 192A192 192 0 0 0 512 320" fill="url(#deepseek-b)"></path>
-      <path d="M512 640a128 128 0 1 1 128-128 128 128 0 0 1-128 128m0-192a64 64 0 1 0 64 64 64 64 0 0 0-64-64" fill="url(#deepseek-c)"></path>
-    </svg>
-);
+import { Gemini, Deepseek } from "@/components/icons";
 
 
 type TranslationEditorProps = {
@@ -65,8 +37,8 @@ type TranslationEditorProps = {
 };
 
 const translatorOptions = [
-    { value: 'gemini', label: 'Gemini', icon: <GeminiLogo /> },
-    { value: 'deepseek', label: 'DeepSeek', icon: <DeepseekLogo /> }
+    { value: 'gemini', label: 'Gemini', icon: <Gemini.Avatar size={20} /> },
+    { value: 'deepseek', label: 'DeepSeek', icon: <Deepseek.Avatar size={20} /> }
 ];
 
 export function TranslationEditor({
