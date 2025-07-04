@@ -9,3 +9,5 @@ import '@/ai/flows/extract-text-from-image.ts';
 import '@/ai/flows/correct-spelling.ts';
 import '@/ai/flows/analyze-tone.ts';
 import '@/ai/flows/translate-sfx.ts';
+import '@/ai/flows/generate-alternative-translations.ts';
+import '@/ai/flows/analyze-formality.ts';

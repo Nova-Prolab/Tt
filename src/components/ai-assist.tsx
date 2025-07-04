@@ -1,6 +1,6 @@
 "use client"
 
-import { Lightbulb, BookOpen, Info, Loader2, Wand2, Check, Sparkles, Drama, Copy } from "lucide-react"
+import { Lightbulb, BookOpen, Info, Loader2, Wand2, Check, Sparkles, Drama, Copy, ClipboardList, Handshake } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { ProvideContextualUnderstandingOutput } from "@/ai/flows/provide-contextual-understanding"
@@ -8,11 +8,13 @@ import type { SuggestTranslationImprovementsOutput } from "@/ai/flows/suggest-tr
 import type { ExplainPhraseContextOutput } from "@/ai/flows/explain-phrase-context"
 import type { AnalyzeToneOutput } from "@/ai/flows/analyze-tone"
 import type { TranslateSfxOutput } from "@/ai/flows/translate-sfx"
+import type { GenerateAlternativeTranslationsOutput } from "@/ai/flows/generate-alternative-translations"
+import type { AnalyzeFormalityOutput } from "@/ai/flows/analyze-formality"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 
-type LoadingState = "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | "tone" | "sfx" | null;
+type LoadingState = "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | "tone" | "sfx" | "alternatives" | "formality" | null;
 
 type AiAssistProps = {
   onSuggestImprovement: () => void;
@@ -21,8 +23,11 @@ type AiAssistProps = {
   onCorrectSpelling: () => void;
   onAnalyzeTone: () => void;
   onTranslateSfx: () => void;
+  onGenerateAlternatives: () => void;
+  onAnalyzeFormality: () => void;
   onApplySuggestion: (suggestion: string) => void;
   onApplySfx: (sfx: string) => void;
+  onApplyAlternative: (alternative: string) => void;
   isLoading: LoadingState;
   isActionDisabled: boolean;
 
@@ -31,6 +36,8 @@ type AiAssistProps = {
   explanation: ExplainPhraseContextOutput | null;
   tone: AnalyzeToneOutput | null;
   sfx: TranslateSfxOutput | null;
+  alternatives: GenerateAlternativeTranslationsOutput | null;
+  formality: AnalyzeFormalityOutput | null;
   selectedText: string;
   originalText: string;
 }
@@ -42,8 +49,11 @@ export function AiAssist({
   onCorrectSpelling,
   onAnalyzeTone,
   onTranslateSfx,
+  onGenerateAlternatives,
+  onAnalyzeFormality,
   onApplySuggestion,
   onApplySfx,
+  onApplyAlternative,
   isLoading,
   isActionDisabled,
   suggestion,
@@ -51,12 +61,14 @@ export function AiAssist({
   explanation,
   tone,
   sfx,
+  alternatives,
+  formality,
   selectedText,
   originalText,
 }: AiAssistProps) {
   const { toast } = useToast();
   
-  const getButtonContent = (buttonType: "suggestion" | "context" | "explanation" | "spelling" | "tone" | "sfx", icon: React.ReactNode, text: string) => {
+  const getButtonContent = (buttonType: "suggestion" | "context" | "explanation" | "spelling" | "tone" | "sfx" | "alternatives" | "formality", icon: React.ReactNode, text: string) => {
     if (isLoading === buttonType) {
       return (
         <>
@@ -81,8 +93,8 @@ export function AiAssist({
     });
   }
 
-  const hasContent = suggestion || context || explanation || tone || sfx;
-  const isAssistantLoading = isLoading === "suggestion" || isLoading === "context" || isLoading === "explanation" || isLoading === "tone" || isLoading === "sfx";
+  const hasContent = suggestion || context || explanation || tone || sfx || alternatives || formality;
+  const isAssistantLoading = isLoading === "suggestion" || isLoading === "context" || isLoading === "explanation" || isLoading === "tone" || isLoading === "sfx" || isLoading === "alternatives" || isLoading === "formality";
 
   return (
     <Card className="h-full">
@@ -93,7 +105,7 @@ export function AiAssist({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Button variant="outline" onClick={onCorrectSpelling} disabled={!!isLoading}>
                 {getButtonContent("spelling", <Wand2 className="mr-2 h-4 w-4" />, "Corregir")}
             </Button>
@@ -111,6 +123,12 @@ export function AiAssist({
             </Button>
             <Button variant="outline" onClick={onTranslateSfx} disabled={!!isLoading || !originalText}>
                 {getButtonContent("sfx", <Sparkles className="mr-2 h-4 w-4" />, "Traducir SFX")}
+            </Button>
+            <Button variant="outline" onClick={onGenerateAlternatives} disabled={!!isLoading || isActionDisabled}>
+                {getButtonContent("alternatives", <ClipboardList className="mr-2 h-4 w-4" />, "Alternativas")}
+            </Button>
+            <Button variant="outline" onClick={onAnalyzeFormality} disabled={!!isLoading || isActionDisabled}>
+                {getButtonContent("formality", <Handshake className="mr-2 h-4 w-4" />, "Formalidad")}
             </Button>
         </div>
 
@@ -132,7 +150,7 @@ export function AiAssist({
             </div>
           )}
           {hasContent && !isAssistantLoading && (
-            <Accordion type="single" collapsible className="w-full" defaultValue={suggestion ? "item-1" : context ? "item-2" : explanation ? "item-3" : tone ? "item-4" : sfx ? "item-5" : undefined}>
+            <Accordion type="single" collapsible className="w-full" defaultValue={suggestion ? "item-1" : context ? "item-2" : explanation ? "item-3" : tone ? "item-4" : sfx ? "item-5" : alternatives ? "item-6" : formality ? "item-7" : undefined}>
               {suggestion && (
                 <AccordionItem value="item-1">
                   <AccordionTrigger>
@@ -240,6 +258,50 @@ export function AiAssist({
                       </div>
                   </AccordionContent>
                   </AccordionItem>
+              )}
+              {alternatives && (
+                <AccordionItem value="item-6">
+                    <AccordionTrigger>
+                        <div className="flex items-center">
+                            <ClipboardList className="mr-2 h-4 w-4 text-primary" />
+                            Traducciones Alternativas
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                        <div className="space-y-3 p-1">
+                            <h4 className="font-semibold text-sm">Sugerencias para: <span className="italic font-normal p-1 bg-muted rounded-sm">"{selectedText}"</span></h4>
+                            <ul className="space-y-2 pt-2">
+                                {alternatives.translations.map((alt, index) => (
+                                    <li key={index} className="flex items-center justify-between p-2 pl-3 bg-primary/10 border-l-4 border-primary rounded-r-md">
+                                        <span className="font-medium text-foreground">{alt}</span>
+                                        <div className="flex gap-1">
+                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onApplyAlternative(alt)}>
+                                                <Check className="h-4 w-4" />
+                                                <span className="sr-only">Aplicar</span>
+                                            </Button>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+              )}
+              {formality && (
+                <AccordionItem value="item-7">
+                  <AccordionTrigger>
+                      <div className="flex items-center">
+                        <Handshake className="mr-2 h-4 w-4 text-primary" />
+                        Análisis de Formalidad
+                      </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                      <div className="space-y-2 p-1">
+                          <h4 className="font-semibold text-sm">Nivel de Formalidad: <span className="text-base font-bold text-primary p-1 rounded-sm">{formality.formality}</span></h4>
+                          <p className="text-sm text-muted-foreground leading-relaxed pt-2">{formality.explanation}</p>
+                      </div>
+                  </AccordionContent>
+                </AccordionItem>
               )}
             </Accordion>
           )}

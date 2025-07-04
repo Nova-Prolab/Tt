@@ -26,6 +26,8 @@ import { extractTextFromImage } from "@/ai/flows/extract-text-from-image";
 import { correctSpelling } from "@/ai/flows/correct-spelling";
 import { analyzeTone, AnalyzeToneOutput } from "@/ai/flows/analyze-tone";
 import { translateSfx, TranslateSfxOutput } from "@/ai/flows/translate-sfx";
+import { generateAlternativeTranslations, GenerateAlternativeTranslationsOutput } from "@/ai/flows/generate-alternative-translations";
+import { analyzeFormality, AnalyzeFormalityOutput } from "@/ai/flows/analyze-formality";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Home() {
@@ -50,9 +52,11 @@ export default function Home() {
     useState<ExplainPhraseContextOutput | null>(null);
   const [aiTone, setAiTone] = useState<AnalyzeToneOutput | null>(null);
   const [aiSfx, setAiSfx] = useState<TranslateSfxOutput | null>(null);
+  const [aiAlternatives, setAiAlternatives] = useState<GenerateAlternativeTranslationsOutput | null>(null);
+  const [aiFormality, setAiFormality] = useState<AnalyzeFormalityOutput | null>(null);
 
   const [isLoading, setIsLoading] = useState<
-    "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | "tone" | "sfx" | null
+    "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | "tone" | "sfx" | "alternatives" | "formality" | null
   >(null);
 
   const { toast } = useToast();
@@ -94,6 +98,8 @@ export default function Home() {
     setAiExplanation(null);
     setAiTone(null);
     setAiSfx(null);
+    setAiAlternatives(null);
+    setAiFormality(null);
   }
 
   const handleImageUpload = (file: File) => {
@@ -328,6 +334,66 @@ export default function Home() {
     }
   };
 
+  const handleGenerateAlternatives = async () => {
+    const textToTranslate = selectedText || originalText;
+    if (!textToTranslate) {
+      toast({
+        title: "No hay Texto para Traducir",
+        description: "Por favor, añade texto original o selecciona una frase.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsLoading("alternatives");
+    clearAiOutputs();
+    try {
+      const result = await generateAlternativeTranslations({
+        text: textToTranslate,
+        targetLanguage: targetLanguage,
+      });
+      setAiAlternatives(result);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error de IA",
+        description: "No se pudieron generar traducciones alternativas.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  const handleAnalyzeFormality = async () => {
+    const textToAnalyze = selectedText || originalText;
+    if (!textToAnalyze) {
+      toast({
+        title: "No hay Texto para Analizar",
+        description: "Por favor, añade texto original o selecciona una frase.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsLoading("formality");
+    clearAiOutputs();
+    try {
+      const result = await analyzeFormality({
+        text: textToAnalyze,
+        language: targetLanguage,
+      });
+      setAiFormality(result);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error de IA",
+        description: "No se pudo analizar la formalidad.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
   const handleApplySuggestion = (suggestionText: string) => {
     setManualTranslation(suggestionText);
     toast({
@@ -335,6 +401,15 @@ export default function Home() {
       description: "La traducción mejorada se ha copiado al editor manual.",
     });
   };
+
+  const handleApplyAlternative = (alternativeText: string) => {
+    setManualTranslation(alternativeText);
+    toast({
+        title: "Alternativa Aplicada",
+        description: "La traducción alternativa se ha copiado al editor manual.",
+    });
+  };
+
 
   const handleApplySfx = (sfxText: string) => {
     const formattedSfx = `*${sfxText}*`;
@@ -500,8 +575,11 @@ export default function Home() {
                 onCorrectSpelling={handleCorrectSpelling}
                 onAnalyzeTone={handleAnalyzeTone}
                 onTranslateSfx={handleTranslateSfx}
+                onGenerateAlternatives={handleGenerateAlternatives}
+                onAnalyzeFormality={handleAnalyzeFormality}
                 onApplySuggestion={handleApplySuggestion}
                 onApplySfx={handleApplySfx}
+                onApplyAlternative={handleApplyAlternative}
                 isLoading={isLoading}
                 isActionDisabled={!originalText && !selectedText}
                 suggestion={aiSuggestion}
@@ -509,6 +587,8 @@ export default function Home() {
                 explanation={aiExplanation}
                 tone={aiTone}
                 sfx={aiSfx}
+                alternatives={aiAlternatives}
+                formality={aiFormality}
                 selectedText={selectedText || originalText}
                 originalText={originalText}
               />
