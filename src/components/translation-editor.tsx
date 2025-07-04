@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Gemini, DeepSeek } from "@/components/icons";
+import { Gemini, DeepSeek } from '@lobehub/icons';
 
 
 type TranslationEditorProps = {
