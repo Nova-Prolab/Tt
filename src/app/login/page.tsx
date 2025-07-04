@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { BookMarked, Loader2 } from 'lucide-react';
-import { useEffect, useActionState } from 'react';
+import { useEffect, useActionState, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 function SubmitButton() {
     const { pending } = useFormStatus();
@@ -23,6 +24,14 @@ function SubmitButton() {
 export default function LoginPage() {
     const [state, formAction] = useActionState(login, undefined);
     const { toast } = useToast();
+    const [shaking, setShaking] = useState<string | null>(null);
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, name: 'username' | 'password') => {
+        if (e.key === 'Backspace' && e.currentTarget.value) {
+            setShaking(name);
+            setTimeout(() => setShaking(null), 600);
+        }
+    };
 
     useEffect(() => {
         if (state?.error) {
@@ -63,7 +72,11 @@ export default function LoginPage() {
                                 type="text" 
                                 placeholder="usuario" 
                                 required 
-                                className="transition-shadow duration-300 focus:shadow-md bg-background/70"
+                                onKeyDown={(e) => handleKeyDown(e, 'username')}
+                                className={cn(
+                                    "transition-all duration-300 focus:shadow-lg focus:scale-[1.02] focus:border-primary bg-background/70",
+                                    shaking === 'username' && 'animate-shake'
+                                )}
                             />
                         </div>
                         <div className="space-y-2">
@@ -74,7 +87,11 @@ export default function LoginPage() {
                                 type="password" 
                                 placeholder="••••••••" 
                                 required 
-                                className="transition-shadow duration-300 focus:shadow-md bg-background/70"
+                                onKeyDown={(e) => handleKeyDown(e, 'password')}
+                                className={cn(
+                                    "transition-all duration-300 focus:shadow-lg focus:scale-[1.02] focus:border-primary bg-background/70",
+                                    shaking === 'password' && 'animate-shake'
+                                )}
                             />
                         </div>
                         <SubmitButton />
