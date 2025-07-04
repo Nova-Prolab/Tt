@@ -7,7 +7,7 @@ import ReactCrop, {
 } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 
-import { UploadCloud, ScanText, Loader2 } from "lucide-react"
+import { UploadCloud, ScanText, Loader2, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
@@ -17,7 +17,7 @@ type ImagePanelProps = {
   imageSrc: string | null;
   isOcrLoading: boolean;
   onImageUpload: (file: File) => void;
-  onOcr: (croppedImageDataUrl: string) => void;
+  onOcr: (croppedImageDataUrl: string, isSfx: boolean) => void;
 };
 
 export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: ImagePanelProps) {
@@ -26,6 +26,7 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
   const imgRef = useRef<HTMLImageElement>(null);
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+  const [isSfx, setIsSfx] = useState(false);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -62,8 +63,6 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
       return;
     }
 
-    // Solución definitiva: Usar getBoundingClientRect para obtener las dimensiones renderizadas precisas,
-    // lo cual es más fiable que .width/.height para imágenes escaladas en diseños complejos.
     const { width: renderedWidth, height: renderedHeight } = image.getBoundingClientRect();
     const { naturalWidth, naturalHeight } = image;
     
@@ -95,7 +94,8 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
     );
     
     const croppedImageDataUrl = canvas.toDataURL('image/png', 1.0);
-    onOcr(croppedImageDataUrl);
+    onOcr(croppedImageDataUrl, isSfx);
+    setIsSfx(false);
   }
 
   return (
@@ -126,23 +126,35 @@ export function ImagePanel({ imageSrc, isOcrLoading, onImageUpload, onOcr }: Ima
               />
             </ReactCrop>
             {completedCrop?.width && completedCrop?.height && (
-              <Button
-                onClick={handleExtractText}
-                disabled={isOcrLoading}
-                className="absolute z-10 animate-in fade-in"
+              <div
+                className="absolute z-10 flex items-center gap-2 animate-in fade-in"
                 style={{
                   top: `${completedCrop.y + completedCrop.height + 8}px`,
                   left: `${completedCrop.x + completedCrop.width / 2}px`,
                   transform: 'translateX(-50%)',
                 }}
               >
-                {isOcrLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <ScanText className="mr-2 h-4 w-4" />
-                )}
-                Extraer Texto
-              </Button>
+                <Button
+                    onClick={() => setIsSfx(!isSfx)}
+                    variant={isSfx ? "default" : "secondary"}
+                    size="icon"
+                    title="Marcar como Onomatopeya (SFX)"
+                >
+                    <Sparkles className="h-4 w-4" />
+                    <span className="sr-only">Marcar como SFX</span>
+                </Button>
+                <Button
+                    onClick={handleExtractText}
+                    disabled={isOcrLoading}
+                >
+                    {isOcrLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                    <ScanText className="mr-2 h-4 w-4" />
+                    )}
+                    Extraer Texto
+                </Button>
+              </div>
             )}
           </>
         ) : (

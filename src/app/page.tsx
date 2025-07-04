@@ -111,7 +111,7 @@ export default function Home() {
     setAiTranslation("");
   }
 
-  const handleOcr = async (croppedImageDataUrl: string) => {
+  const handleOcr = async (croppedImageDataUrl: string, isSfx: boolean) => {
     if (!imageSrc) {
       toast({
         title: "No hay Imagen",
@@ -123,7 +123,14 @@ export default function Home() {
     setIsLoading("ocr");
     try {
       const result = await extractTextFromImage({ imageDataUri: croppedImageDataUrl });
-      setOriginalText(prev => (prev.trim() ? prev + "\n" : "") + result.extractedText);
+      let textToAppend = result.extractedText;
+
+      if (isSfx) {
+        textToAppend = `*${textToAppend}*`;
+      }
+      
+      setOriginalText(prev => (prev.trim() ? prev + "\n" + textToAppend : textToAppend));
+
       toast({
         title: "OCR Completado",
         description: "Texto extraído de la selección y añadido al editor.",
