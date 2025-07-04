@@ -13,6 +13,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
+const GeminiLogo = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style={{stopColor: '#A855F7', stopOpacity: 1}} />
+          <stop offset="100%" style={{stopColor: '#4F46E5', stopOpacity: 1}} />
+        </linearGradient>
+      </defs>
+      <path d="M12 2L14.0625 8.25L20.5 10L14.0625 11.75L12 18L9.9375 11.75L3.5 10L9.9375 8.25L12 2Z" fill="url(#grad1)"/>
+      <path d="M18 5L19.0312 8L22 8.75L19.0312 9.5L18 12.5L16.9688 9.5L14 8.75L16.9688 8L18 5Z" fill="url(#grad1)" opacity="0.8"/>
+    </svg>
+);
+
+const DeepseekLogo = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="#0069FF"/>
+        <path d="M12 6C8.69 6 6 8.69 6 12C6 15.31 8.69 18 12 18V6Z" fill="#0069FF"/>
+    </svg>
+);
+
 type TranslationEditorProps = {
   originalText: string;
   onOriginalTextChange: (text: string) => void;
@@ -34,54 +54,9 @@ type TranslationEditorProps = {
   canRedo: boolean;
 };
 
-const GeminiIcon = ({ size = 20, className = '' }: { size?: number, className?: string }) => (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 48 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-    >
-      <path
-        d="M24 4L26.3137 19.6863L44 22L28.3137 26.3137L24 44L19.6863 28.3137L2 22L19.6863 19.6863L24 4Z"
-        className="text-primary"
-        fill="currentColor"
-      />
-      <path
-        d="M24 15.5L25.1716 21.8284L32.5 23L26.1716 25.1716L24 32.5L21.8284 26.1716L15.5 23L21.8284 21.8284L24 15.5Z"
-        className="text-primary-foreground"
-        fill="currentColor"
-      />
-    </svg>
-);
-
-const DeepSeekIcon = ({ size = 20, className = '' }: { size?: number, className?: string }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 100 100"
-    fill="currentColor"
-    xmlns="http://www.w3.org/2000/svg"
-    className={className}
-  >
-    <circle cx="20" cy="20" r="8" />
-    <circle cx="20" cy="40" r="8" />
-    <circle cx="20" cy="60" r="8" />
-    <circle cx="20" cy="80" r="8" />
-    <circle cx="40" cy="20" r="8" />
-    <circle cx="40" cy="80" r="8" />
-    <circle cx="60" cy="30" r="8" />
-    <circle cx="60" cy="70" r="8" />
-    <circle cx="80" cy="40" r="8" />
-    <circle cx="80" cy="60" r="8" />
-  </svg>
-);
-
-
 const translatorOptions = [
-    { value: 'gemini', label: 'Gemini', icon: <GeminiIcon size={20} /> },
-    { value: 'deepseek', label: 'DeepSeek', icon: <DeepSeekIcon size={20} /> }
+    { value: 'gemini', label: 'Gemini', icon: <GeminiLogo /> },
+    { value: 'deepseek', label: 'DeepSeek', icon: <DeepseekLogo /> }
 ];
 
 export function TranslationEditor({
