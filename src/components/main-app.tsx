@@ -29,6 +29,9 @@ import { translateSfx, TranslateSfxOutput } from "@/ai/flows/translate-sfx";
 import { generateAlternativeTranslations, GenerateAlternativeTranslationsOutput } from "@/ai/flows/generate-alternative-translations";
 import { analyzeFormality, AnalyzeFormalityOutput } from "@/ai/flows/analyze-formality";
 import { analyzeTranslationQuality, AnalyzeTranslationQualityOutput } from "@/ai/flows/analyze-translation-quality";
+import { summarizePanel, SummarizePanelOutput } from "@/ai/flows/summarize-panel";
+import { identifySpeakers, IdentifySpeakersOutput } from "@/ai/flows/identify-speakers";
+import { rephraseText, RephraseTextOutput } from "@/ai/flows/rephrase-text";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function MainApp() {
@@ -56,9 +59,12 @@ export default function MainApp() {
   const [aiAlternatives, setAiAlternatives] = useState<GenerateAlternativeTranslationsOutput | null>(null);
   const [aiFormality, setAiFormality] = useState<AnalyzeFormalityOutput | null>(null);
   const [aiQuality, setAiQuality] = useState<AnalyzeTranslationQualityOutput | null>(null);
+  const [aiSummary, setAiSummary] = useState<SummarizePanelOutput | null>(null);
+  const [aiSpeakers, setAiSpeakers] = useState<IdentifySpeakersOutput | null>(null);
+  const [aiRephrasing, setAiRephrasing] = useState<RephraseTextOutput | null>(null);
 
   const [isLoading, setIsLoading] = useState<
-    "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | "tone" | "sfx" | "alternatives" | "formality" | "quality" | null
+    "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | "tone" | "sfx" | "alternatives" | "formality" | "quality" | "summary" | "speakers" | "rephrasing" | null
   >(null);
 
   const { toast } = useToast();
@@ -103,6 +109,9 @@ export default function MainApp() {
     setAiAlternatives(null);
     setAiFormality(null);
     setAiQuality(null);
+    setAiSummary(null);
+    setAiSpeakers(null);
+    setAiRephrasing(null);
   }
 
   const handleImageUpload = (file: File) => {
@@ -427,6 +436,97 @@ export default function MainApp() {
     }
   };
 
+  const handleSummarizePanel = async () => {
+    const textToSummarize = selectedText || originalText;
+    if (!textToSummarize) {
+      toast({
+        title: "No hay Texto para Resumir",
+        description: "Por favor, añade texto original o selecciona una frase.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsLoading("summary");
+    clearAiOutputs();
+    try {
+      const result = await summarizePanel({
+        text: textToSummarize,
+        language: targetLanguage,
+      });
+      setAiSummary(result);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error de IA",
+        description: "No se pudo generar el resumen.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  const handleIdentifySpeakers = async () => {
+    const textToAnalyze = selectedText || originalText;
+    if (!textToAnalyze) {
+      toast({
+        title: "No hay Diálogo para Analizar",
+        description: "Por favor, añade el texto del diálogo.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsLoading("speakers");
+    clearAiOutputs();
+    try {
+      const result = await identifySpeakers({
+        dialogue: textToAnalyze,
+        language: targetLanguage,
+      });
+      setAiSpeakers(result);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error de IA",
+        description: "No se pudieron identificar los interlocutores.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  const handleRephraseText = async (style: string) => {
+    const textToRephrase = selectedText || manualTranslation;
+    if (!textToRephrase) {
+      toast({
+        title: "No hay Texto para Reformular",
+        description: "Escribe o selecciona una traducción para reformular.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsLoading("rephrasing");
+    clearAiOutputs();
+    try {
+      const result = await rephraseText({
+        text: textToRephrase,
+        style: style,
+        language: targetLanguage,
+      });
+      setAiRephrasing(result);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error de IA",
+        description: "No se pudo reformular el texto.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
   const handleApplySuggestion = (suggestionText: string) => {
     setManualTranslation(suggestionText);
     toast({
@@ -443,6 +543,13 @@ export default function MainApp() {
     });
   };
 
+  const handleApplyRephrasing = (rephrasedText: string) => {
+    setManualTranslation(rephrasedText);
+    toast({
+        title: "Texto Reformulado Aplicado",
+        description: "La nueva versión del texto se ha copiado al editor manual.",
+    });
+  };
 
   const handleApplySfx = (sfxText: string) => {
     const formattedSfx = `*${sfxText}*`;
@@ -611,9 +718,13 @@ export default function MainApp() {
                 onGenerateAlternatives={handleGenerateAlternatives}
                 onAnalyzeFormality={handleAnalyzeFormality}
                 onAnalyzeQuality={handleAnalyzeQuality}
+                onSummarizePanel={handleSummarizePanel}
+                onIdentifySpeakers={handleIdentifySpeakers}
+                onRephraseText={handleRephraseText}
                 onApplySuggestion={handleApplySuggestion}
                 onApplySfx={handleApplySfx}
                 onApplyAlternative={handleApplyAlternative}
+                onApplyRephrasing={handleApplyRephrasing}
                 isLoading={isLoading}
                 isActionDisabled={!originalText && !selectedText}
                 isQualityCheckDisabled={!originalText || !manualTranslation}
@@ -625,8 +736,12 @@ export default function MainApp() {
                 alternatives={aiAlternatives}
                 formality={aiFormality}
                 quality={aiQuality}
+                summary={aiSummary}
+                speakers={aiSpeakers}
+                rephrasing={aiRephrasing}
                 selectedText={selectedText || originalText}
                 originalText={originalText}
+                manualTranslation={manualTranslation}
               />
             </TabsContent>
           </Tabs>

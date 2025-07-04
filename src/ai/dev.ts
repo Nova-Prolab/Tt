@@ -14,3 +14,6 @@ import '@/ai/flows/translate-sfx.ts';
 import '@/ai/flows/generate-alternative-translations.ts';
 import '@/ai/flows/analyze-formality.ts';
 import '@/ai/flows/analyze-translation-quality.ts';
+import '@/ai/flows/summarize-panel.ts';
+import '@/ai/flows/identify-speakers.ts';
+import '@/ai/flows/rephrase-text.ts';

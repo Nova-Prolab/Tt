@@ -1,13 +1,17 @@
 
 "use client"
 
-import { Lightbulb, BookOpen, Info, Loader2, Wand2, Check, Sparkles, Drama, Copy, ClipboardList, Handshake, BarChartHorizontal, ChevronDown } from "lucide-react"
+import { Lightbulb, BookOpen, Info, Loader2, Wand2, Check, Sparkles, Drama, Copy, ClipboardList, Handshake, BarChartHorizontal, ChevronDown, FileText, Users, Repeat } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal
 } from "@/components/ui/dropdown-menu"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { ProvideContextualUnderstandingOutput } from "@/ai/flows/provide-contextual-understanding"
@@ -18,12 +22,15 @@ import type { TranslateSfxOutput } from "@/ai/flows/translate-sfx"
 import type { GenerateAlternativeTranslationsOutput } from "@/ai/flows/generate-alternative-translations"
 import type { AnalyzeFormalityOutput } from "@/ai/flows/analyze-formality"
 import type { AnalyzeTranslationQualityOutput } from "@/ai/flows/analyze-translation-quality"
+import type { SummarizePanelOutput } from "@/ai/flows/summarize-panel"
+import type { IdentifySpeakersOutput } from "@/ai/flows/identify-speakers"
+import type { RephraseTextOutput } from "@/ai/flows/rephrase-text"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { Progress } from "@/components/ui/progress"
 
-type LoadingState = "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | "tone" | "sfx" | "alternatives" | "formality" | "quality" | null;
+type LoadingState = "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | "tone" | "sfx" | "alternatives" | "formality" | "quality" | "summary" | "speakers" | "rephrasing" | null;
 
 type AiAssistProps = {
   onSuggestImprovement: () => void;
@@ -35,9 +42,13 @@ type AiAssistProps = {
   onGenerateAlternatives: () => void;
   onAnalyzeFormality: () => void;
   onAnalyzeQuality: () => void;
+  onSummarizePanel: () => void;
+  onIdentifySpeakers: () => void;
+  onRephraseText: (style: string) => void;
   onApplySuggestion: (suggestion: string) => void;
   onApplySfx: (sfx: string) => void;
   onApplyAlternative: (alternative: string) => void;
+  onApplyRephrasing: (rephrasedText: string) => void;
   isLoading: LoadingState;
   isActionDisabled: boolean;
   isQualityCheckDisabled: boolean;
@@ -50,8 +61,12 @@ type AiAssistProps = {
   alternatives: GenerateAlternativeTranslationsOutput | null;
   formality: AnalyzeFormalityOutput | null;
   quality: AnalyzeTranslationQualityOutput | null;
+  summary: SummarizePanelOutput | null;
+  speakers: IdentifySpeakersOutput | null;
+  rephrasing: RephraseTextOutput | null;
   selectedText: string;
   originalText: string;
+  manualTranslation: string;
 }
 
 export function AiAssist({
@@ -64,9 +79,13 @@ export function AiAssist({
   onGenerateAlternatives,
   onAnalyzeFormality,
   onAnalyzeQuality,
+  onSummarizePanel,
+  onIdentifySpeakers,
+  onRephraseText,
   onApplySuggestion,
   onApplySfx,
   onApplyAlternative,
+  onApplyRephrasing,
   isLoading,
   isActionDisabled,
   isQualityCheckDisabled,
@@ -78,8 +97,12 @@ export function AiAssist({
   alternatives,
   formality,
   quality,
+  summary,
+  speakers,
+  rephrasing,
   selectedText,
   originalText,
+  manualTranslation,
 }: AiAssistProps) {
   const { toast } = useToast();
 
@@ -91,8 +114,8 @@ export function AiAssist({
     });
   }
 
-  const hasContent = suggestion || context || explanation || tone || sfx || alternatives || formality || quality;
-  const isAssistantLoading = isLoading === "suggestion" || isLoading === "context" || isLoading === "explanation" || isLoading === "tone" || isLoading === "sfx" || isLoading === "alternatives" || isLoading === "formality" || isLoading === "quality";
+  const hasContent = suggestion || context || explanation || tone || sfx || alternatives || formality || quality || summary || speakers || rephrasing;
+  const isAssistantLoading = isLoading === "suggestion" || isLoading === "context" || isLoading === "explanation" || isLoading === "tone" || isLoading === "sfx" || isLoading === "alternatives" || isLoading === "formality" || isLoading === "quality" || isLoading === "summary" || isLoading === "speakers" || isLoading === "rephrasing";
 
   return (
     <Card className="h-full">
@@ -112,7 +135,7 @@ export function AiAssist({
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
-                    <DropdownMenuItem onClick={onCorrectSpelling} disabled={!!isLoading}>
+                    <DropdownMenuItem onClick={onCorrectSpelling} disabled={!!isLoading || !manualTranslation}>
                         <Wand2 className="mr-2 h-4 w-4"/>
                         <span>Corregir Ortografía</span>
                     </DropdownMenuItem>
@@ -128,6 +151,20 @@ export function AiAssist({
                         <Sparkles className="mr-2 h-4 w-4"/>
                         <span>Traducir SFX</span>
                     </DropdownMenuItem>
+                    <DropdownMenuSub>
+                        <DropdownMenuSubTrigger disabled={!!isLoading || (!selectedText && !manualTranslation)}>
+                            <Repeat className="mr-2 h-4 w-4"/>
+                            <span>Reformular Texto</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem onClick={() => onRephraseText("more formal")}>Más Formal</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => onRephraseText("more casual")}>Más Casual</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => onRephraseText("simpler")}>Más Simple</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => onRephraseText("more poetic")}>Más Poético</DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                    </DropdownMenuSub>
                 </DropdownMenuContent>
             </DropdownMenu>
 
@@ -162,13 +199,21 @@ export function AiAssist({
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
-                    <DropdownMenuItem onClick={onGetContext} disabled={!!isLoading}>
+                    <DropdownMenuItem onClick={onGetContext} disabled={!!isLoading || isActionDisabled}>
                         <BookOpen className="mr-2 h-4 w-4"/>
                         <span>Obtener Contexto del Panel</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={onExplainPhrase} disabled={!!isLoading || isActionDisabled}>
                         <Info className="mr-2 h-4 w-4"/>
                         <span>Explicar Frase Seleccionada</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={onSummarizePanel} disabled={!!isLoading || isActionDisabled}>
+                        <FileText className="mr-2 h-4 w-4"/>
+                        <span>Resumir Panel</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={onIdentifySpeakers} disabled={!!isLoading || isActionDisabled}>
+                        <Users className="mr-2 h-4 w-4"/>
+                        <span>Identificar Interlocutores</span>
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
@@ -193,7 +238,7 @@ export function AiAssist({
             </div>
           )}
           {hasContent && !isAssistantLoading && (
-            <Accordion type="single" collapsible className="w-full" defaultValue={suggestion ? "item-1" : context ? "item-2" : explanation ? "item-3" : tone ? "item-4" : sfx ? "item-5" : alternatives ? "item-6" : formality ? "item-7" : quality ? "item-8" : undefined}>
+            <Accordion type="single" collapsible className="w-full" defaultValue={suggestion ? "item-1" : context ? "item-2" : explanation ? "item-3" : tone ? "item-4" : sfx ? "item-5" : alternatives ? "item-6" : formality ? "item-7" : quality ? "item-8" : summary ? "item-9" : speakers ? "item-10" : rephrasing ? "item-11" : undefined}>
               {suggestion && (
                 <AccordionItem value="item-1">
                   <AccordionTrigger>
@@ -382,6 +427,72 @@ export function AiAssist({
                             <p className="text-xs text-muted-foreground">{quality.culturalAdaptation}</p>
                         </div>
                       </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+              {summary && (
+                <AccordionItem value="item-9">
+                  <AccordionTrigger>
+                      <div className="flex items-center">
+                        <FileText className="mr-2 h-4 w-4 text-primary" />
+                        Resumen del Panel
+                      </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                      <div className="space-y-2 p-2 bg-muted/50 rounded-md">
+                          <p className="text-sm text-muted-foreground leading-relaxed">{summary.summary}</p>
+                      </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+              {speakers && (
+                <AccordionItem value="item-10">
+                  <AccordionTrigger>
+                      <div className="flex items-center">
+                        <Users className="mr-2 h-4 w-4 text-primary" />
+                        Análisis de Interlocutores
+                      </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                      <div className="space-y-4 p-1">
+                          <ul className="space-y-2">
+                              {speakers.identifiedLines.map((line, index) => (
+                                  <li key={index} className="flex gap-3 text-sm">
+                                      <span className="font-bold text-primary w-24 shrink-0 text-right">{line.speaker}:</span>
+                                      <span className="text-muted-foreground">{line.line}</span>
+                                  </li>
+                              ))}
+                          </ul>
+                          <Separator/>
+                          <div>
+                              <h4 className="font-semibold text-sm">Análisis</h4>
+                              <p className="text-xs text-muted-foreground pt-1">{speakers.analysis}</p>
+                          </div>
+                      </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+              {rephrasing && (
+                <AccordionItem value="item-11">
+                  <AccordionTrigger>
+                      <div className="flex items-center">
+                        <Repeat className="mr-2 h-4 w-4 text-primary" />
+                        Texto Reformulado
+                      </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-3 p-1">
+                      <h4 className="font-semibold text-sm">Texto Reformulado</h4>
+                      <p className="text-base p-3 bg-primary/10 border-l-4 border-primary rounded-r-md font-medium text-foreground">{rephrasing.rephrasedText}</p>
+                      <h4 className="font-semibold pt-2 text-sm">Explicación</h4>
+                      <p className="text-sm text-muted-foreground">{rephrasing.explanation}</p>
+                      <div className="pt-2">
+                        <Button size="sm" onClick={() => onApplyRephrasing(rephrasing.rephrasedText)}>
+                            <Check className="mr-2 h-4 w-4"/>
+                            Aplicar Texto
+                        </Button>
+                      </div>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
               )}
