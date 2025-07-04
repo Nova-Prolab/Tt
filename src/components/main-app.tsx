@@ -28,6 +28,7 @@ import { analyzeTone, AnalyzeToneOutput } from "@/ai/flows/analyze-tone";
 import { translateSfx, TranslateSfxOutput } from "@/ai/flows/translate-sfx";
 import { generateAlternativeTranslations, GenerateAlternativeTranslationsOutput } from "@/ai/flows/generate-alternative-translations";
 import { analyzeFormality, AnalyzeFormalityOutput } from "@/ai/flows/analyze-formality";
+import { analyzeTranslationQuality, AnalyzeTranslationQualityOutput } from "@/ai/flows/analyze-translation-quality";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function MainApp() {
@@ -54,9 +55,10 @@ export default function MainApp() {
   const [aiSfx, setAiSfx] = useState<TranslateSfxOutput | null>(null);
   const [aiAlternatives, setAiAlternatives] = useState<GenerateAlternativeTranslationsOutput | null>(null);
   const [aiFormality, setAiFormality] = useState<AnalyzeFormalityOutput | null>(null);
+  const [aiQuality, setAiQuality] = useState<AnalyzeTranslationQualityOutput | null>(null);
 
   const [isLoading, setIsLoading] = useState<
-    "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | "tone" | "sfx" | "alternatives" | "formality" | null
+    "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | "tone" | "sfx" | "alternatives" | "formality" | "quality" | null
   >(null);
 
   const { toast } = useToast();
@@ -100,6 +102,7 @@ export default function MainApp() {
     setAiSfx(null);
     setAiAlternatives(null);
     setAiFormality(null);
+    setAiQuality(null);
   }
 
   const handleImageUpload = (file: File) => {
@@ -394,6 +397,36 @@ export default function MainApp() {
     }
   };
 
+  const handleAnalyzeQuality = async () => {
+    if (!originalText || !manualTranslation) {
+      toast({
+        title: "Falta Texto",
+        description: "Por favor, proporciona el texto original y tu traducción para analizar la calidad.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsLoading("quality");
+    clearAiOutputs();
+    try {
+      const result = await analyzeTranslationQuality({
+        originalText,
+        translatedText: manualTranslation,
+        language: targetLanguage,
+      });
+      setAiQuality(result);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error de IA",
+        description: "No se pudo analizar la calidad de la traducción.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
   const handleApplySuggestion = (suggestionText: string) => {
     setManualTranslation(suggestionText);
     toast({
@@ -577,11 +610,13 @@ export default function MainApp() {
                 onTranslateSfx={handleTranslateSfx}
                 onGenerateAlternatives={handleGenerateAlternatives}
                 onAnalyzeFormality={handleAnalyzeFormality}
+                onAnalyzeQuality={handleAnalyzeQuality}
                 onApplySuggestion={handleApplySuggestion}
                 onApplySfx={handleApplySfx}
                 onApplyAlternative={handleApplyAlternative}
                 isLoading={isLoading}
                 isActionDisabled={!originalText && !selectedText}
+                isQualityCheckDisabled={!originalText || !manualTranslation}
                 suggestion={aiSuggestion}
                 context={aiContext}
                 explanation={aiExplanation}
@@ -589,6 +624,7 @@ export default function MainApp() {
                 sfx={aiSfx}
                 alternatives={aiAlternatives}
                 formality={aiFormality}
+                quality={aiQuality}
                 selectedText={selectedText || originalText}
                 originalText={originalText}
               />

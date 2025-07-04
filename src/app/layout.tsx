@@ -22,7 +22,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <ThemeProvider
-            defaultTheme="light"
+            defaultTheme="dark"
             storageKey="manhwa-scribe-theme"
         >
             {children}

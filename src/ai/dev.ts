@@ -1,3 +1,5 @@
+'use server';
+
 import { config } from 'dotenv';
 config();
 
@@ -11,3 +13,4 @@ import '@/ai/flows/analyze-tone.ts';
 import '@/ai/flows/translate-sfx.ts';
 import '@/ai/flows/generate-alternative-translations.ts';
 import '@/ai/flows/analyze-formality.ts';
+import '@/ai/flows/analyze-translation-quality.ts';

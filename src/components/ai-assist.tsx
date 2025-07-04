@@ -1,6 +1,6 @@
 "use client"
 
-import { Lightbulb, BookOpen, Info, Loader2, Wand2, Check, Sparkles, Drama, Copy, ClipboardList, Handshake } from "lucide-react"
+import { Lightbulb, BookOpen, Info, Loader2, Wand2, Check, Sparkles, Drama, Copy, ClipboardList, Handshake, BarChartHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { ProvideContextualUnderstandingOutput } from "@/ai/flows/provide-contextual-understanding"
@@ -10,11 +10,13 @@ import type { AnalyzeToneOutput } from "@/ai/flows/analyze-tone"
 import type { TranslateSfxOutput } from "@/ai/flows/translate-sfx"
 import type { GenerateAlternativeTranslationsOutput } from "@/ai/flows/generate-alternative-translations"
 import type { AnalyzeFormalityOutput } from "@/ai/flows/analyze-formality"
+import type { AnalyzeTranslationQualityOutput } from "@/ai/flows/analyze-translation-quality"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
+import { Progress } from "@/components/ui/progress"
 
-type LoadingState = "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | "tone" | "sfx" | "alternatives" | "formality" | null;
+type LoadingState = "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | "tone" | "sfx" | "alternatives" | "formality" | "quality" | null;
 
 type AiAssistProps = {
   onSuggestImprovement: () => void;
@@ -25,11 +27,13 @@ type AiAssistProps = {
   onTranslateSfx: () => void;
   onGenerateAlternatives: () => void;
   onAnalyzeFormality: () => void;
+  onAnalyzeQuality: () => void;
   onApplySuggestion: (suggestion: string) => void;
   onApplySfx: (sfx: string) => void;
   onApplyAlternative: (alternative: string) => void;
   isLoading: LoadingState;
   isActionDisabled: boolean;
+  isQualityCheckDisabled: boolean;
 
   suggestion: SuggestTranslationImprovementsOutput | null;
   context: ProvideContextualUnderstandingOutput | null;
@@ -38,6 +42,7 @@ type AiAssistProps = {
   sfx: TranslateSfxOutput | null;
   alternatives: GenerateAlternativeTranslationsOutput | null;
   formality: AnalyzeFormalityOutput | null;
+  quality: AnalyzeTranslationQualityOutput | null;
   selectedText: string;
   originalText: string;
 }
@@ -51,11 +56,13 @@ export function AiAssist({
   onTranslateSfx,
   onGenerateAlternatives,
   onAnalyzeFormality,
+  onAnalyzeQuality,
   onApplySuggestion,
   onApplySfx,
   onApplyAlternative,
   isLoading,
   isActionDisabled,
+  isQualityCheckDisabled,
   suggestion,
   context,
   explanation,
@@ -63,12 +70,13 @@ export function AiAssist({
   sfx,
   alternatives,
   formality,
+  quality,
   selectedText,
   originalText,
 }: AiAssistProps) {
   const { toast } = useToast();
   
-  const getButtonContent = (buttonType: "suggestion" | "context" | "explanation" | "spelling" | "tone" | "sfx" | "alternatives" | "formality", icon: React.ReactNode, text: string) => {
+  const getButtonContent = (buttonType: "suggestion" | "context" | "explanation" | "spelling" | "tone" | "sfx" | "alternatives" | "formality" | "quality", icon: React.ReactNode, text: string) => {
     if (isLoading === buttonType) {
       return (
         <>
@@ -93,8 +101,8 @@ export function AiAssist({
     });
   }
 
-  const hasContent = suggestion || context || explanation || tone || sfx || alternatives || formality;
-  const isAssistantLoading = isLoading === "suggestion" || isLoading === "context" || isLoading === "explanation" || isLoading === "tone" || isLoading === "sfx" || isLoading === "alternatives" || isLoading === "formality";
+  const hasContent = suggestion || context || explanation || tone || sfx || alternatives || formality || quality;
+  const isAssistantLoading = isLoading === "suggestion" || isLoading === "context" || isLoading === "explanation" || isLoading === "tone" || isLoading === "sfx" || isLoading === "alternatives" || isLoading === "formality" || isLoading === "quality";
 
   return (
     <Card className="h-full">
@@ -109,7 +117,7 @@ export function AiAssist({
             <Button variant="outline" onClick={onCorrectSpelling} disabled={!!isLoading}>
                 {getButtonContent("spelling", <Wand2 className="mr-2 h-4 w-4" />, "Corregir")}
             </Button>
-            <Button variant="outline" onClick={onSuggestImprovement} disabled={!!isLoading}>
+            <Button variant="outline" onClick={onSuggestImprovement} disabled={!!isLoading || isQualityCheckDisabled}>
                 {getButtonContent("suggestion", <Lightbulb className="mr-2 h-4 w-4" />, "Sugerir")}
             </Button>
             <Button variant="outline" onClick={onGetContext} disabled={!!isLoading}>
@@ -129,6 +137,9 @@ export function AiAssist({
             </Button>
             <Button variant="outline" onClick={onAnalyzeFormality} disabled={!!isLoading || isActionDisabled}>
                 {getButtonContent("formality", <Handshake className="mr-2 h-4 w-4" />, "Formalidad")}
+            </Button>
+            <Button variant="outline" onClick={onAnalyzeQuality} disabled={!!isLoading || isQualityCheckDisabled} className="col-span-full">
+                {getButtonContent("quality", <BarChartHorizontal className="mr-2 h-4 w-4" />, "Analizar Calidad")}
             </Button>
         </div>
 
@@ -150,7 +161,7 @@ export function AiAssist({
             </div>
           )}
           {hasContent && !isAssistantLoading && (
-            <Accordion type="single" collapsible className="w-full" defaultValue={suggestion ? "item-1" : context ? "item-2" : explanation ? "item-3" : tone ? "item-4" : sfx ? "item-5" : alternatives ? "item-6" : formality ? "item-7" : undefined}>
+            <Accordion type="single" collapsible className="w-full" defaultValue={suggestion ? "item-1" : context ? "item-2" : explanation ? "item-3" : tone ? "item-4" : sfx ? "item-5" : alternatives ? "item-6" : formality ? "item-7" : quality ? "item-8" : undefined}>
               {suggestion && (
                 <AccordionItem value="item-1">
                   <AccordionTrigger>
@@ -299,6 +310,45 @@ export function AiAssist({
                       <div className="space-y-2 p-1">
                           <h4 className="font-semibold text-sm">Nivel de Formalidad: <span className="text-base font-bold text-primary p-1 rounded-sm">{formality.formality}</span></h4>
                           <p className="text-sm text-muted-foreground leading-relaxed pt-2">{formality.explanation}</p>
+                      </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+              {quality && (
+                <AccordionItem value="item-8">
+                  <AccordionTrigger>
+                      <div className="flex items-center">
+                        <BarChartHorizontal className="mr-2 h-4 w-4 text-primary" />
+                        Análisis de Calidad
+                      </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                      <div className="space-y-4 p-1">
+                        <div className="text-center space-y-2 p-4 bg-muted/50 rounded-lg">
+                            <p className="text-sm font-medium text-muted-foreground">Puntuación General</p>
+                            <p className="text-5xl font-bold text-primary">{quality.overallScore}<span className="text-2xl text-muted-foreground">/100</span></p>
+                            <p className="text-sm text-muted-foreground px-4">{quality.summary}</p>
+                        </div>
+
+                        <div className="space-y-3">
+                            <h4 className="font-semibold text-sm">Precisión ({quality.accuracy.score}/10)</h4>
+                            <Progress value={quality.accuracy.score * 10} className="h-2" />
+                            <p className="text-xs text-muted-foreground">{quality.accuracy.explanation}</p>
+                        </div>
+                         <div className="space-y-3">
+                            <h4 className="font-semibold text-sm">Legibilidad ({quality.readability.score}/10)</h4>
+                            <Progress value={quality.readability.score * 10} className="h-2" />
+                            <p className="text-xs text-muted-foreground">{quality.readability.explanation}</p>
+                        </div>
+                         <div className="space-y-3">
+                            <h4 className="font-semibold text-sm">Consistencia de Tono ({quality.toneConsistency.score}/10)</h4>
+                            <Progress value={quality.toneConsistency.score * 10} className="h-2" />
+                            <p className="text-xs text-muted-foreground">{quality.toneConsistency.explanation}</p>
+                        </div>
+                         <div className="space-y-2">
+                            <h4 className="font-semibold text-sm">Adaptación Cultural</h4>
+                            <p className="text-xs text-muted-foreground">{quality.culturalAdaptation}</p>
+                        </div>
                       </div>
                   </AccordionContent>
                 </AccordionItem>
