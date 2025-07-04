@@ -22,18 +22,19 @@ const GeminiAvatar = ({ size = 20, ...props }: AvatarProps) => (
 );
 
 const DeepSeekAvatar = ({ size = 20, shape = 'circle', ...props }: AvatarProps) => (
-    <svg 
-        xmlns="http://www.w3.org/2000/svg" 
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
         width={size}
         height={size}
         viewBox="0 0 24 24"
-        style={shape === 'square' ? { borderRadius: '15%' } : {}}
         {...props}
     >
-        <path 
-            fill="currentColor" 
-            d="M11.939 21.25a9.25 9.25 0 0 1-9.25-9.25V3h1.5v9a7.75 7.75 0 0 0 7.75 7.75h8.25v-1.5h-8.25Z"
-        />
+        <g fill="none">
+            <path
+                fill="currentColor"
+                d="M11.939 21.25a9.25 9.25 0 0 1-9.25-9.25V3h1.5v9a7.75 7.75 0 0 0 7.75 7.75h8.25v-1.5h-8.25Z"
+            />
+        </g>
     </svg>
 );
 
