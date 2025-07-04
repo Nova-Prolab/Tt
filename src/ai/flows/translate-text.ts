@@ -56,6 +56,7 @@ const prompt = ai.definePrompt({
   input: {schema: InternalTranslateInputSchema},
   output: {schema: TranslateTextOutputSchema},
   prompt: `{{{persona}}} Translate the following text into {{targetLanguage}}.
+**Crucially, you must preserve the original formatting, including all line breaks and newlines.** The translated text should have the exact same structure of lines and paragraphs as the original text.
 {{#if sourceLanguage}}The source language is {{sourceLanguage}}.{{/if}}
 
 Text to translate:
@@ -77,7 +78,7 @@ const translateTextFlow = ai.defineFlow(
             messages: [
               {
                 "role": "system",
-                "content": `You are a professional translator. Translate the following text into ${input.targetLanguage}. ${input.sourceLanguage ? `The source language is ${input.sourceLanguage}.` : ''} Only return the translated text without any extra comments, explanations, or introductions.`
+                "content": `You are a professional translator. Translate the following text into ${input.targetLanguage}. ${input.sourceLanguage ? `The source language is ${input.sourceLanguage}.` : ''} **Crucially, you must preserve the original formatting, including all line breaks and newlines.** The translated text should have the exact same structure of lines and paragraphs as the original text. Only return the translated text without any extra comments, explanations, or introductions.`
               },
               {
                 "role": "user",
