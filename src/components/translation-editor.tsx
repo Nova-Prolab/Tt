@@ -11,8 +11,7 @@ import type React from "react"
 import { useToast } from "@/hooks/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { Separator } from "@/components/ui/separator"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Gemini, DeepSeek } from '@lobehub/icons';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 type TranslationEditorProps = {
@@ -37,8 +36,8 @@ type TranslationEditorProps = {
 };
 
 const translatorOptions = [
-    { value: 'gemini', label: 'Gemini', icon: <Gemini.Avatar size={20} /> },
-    { value: 'deepseek', label: 'DeepSeek', icon: <DeepSeek.Avatar size={20} /> }
+    { value: 'gemini', label: 'Gemini', icon: <img src="https://i.imgur.com/uNRU0nw.png" alt="Gemini Icon" className="w-5 h-5 rounded-full" /> },
+    { value: 'deepseek', label: 'DeepSeek', icon: <img src="https://i.imgur.com/Mavtzv1.png" alt="DeepSeek Icon" className="w-5 h-5" /> }
 ];
 
 export function TranslationEditor({
