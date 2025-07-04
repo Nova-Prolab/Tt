@@ -2,6 +2,7 @@ import React from 'react';
 
 type AvatarProps = {
   size?: number;
+  shape?: 'circle' | 'square';
   [key: string]: any;
 };
 
@@ -20,12 +21,13 @@ const GeminiAvatar = ({ size = 20, ...props }: AvatarProps) => (
   </svg>
 );
 
-const DeepSeekAvatar = ({ size = 20, ...props }: AvatarProps) => (
+const DeepSeekAvatar = ({ size = 20, shape = 'circle', ...props }: AvatarProps) => (
     <svg 
         xmlns="http://www.w3.org/2000/svg" 
         width={size}
         height={size}
         viewBox="0 0 24 24"
+        style={shape === 'square' ? { borderRadius: '15%' } : {}}
         {...props}
     >
         <path 
@@ -34,6 +36,7 @@ const DeepSeekAvatar = ({ size = 20, ...props }: AvatarProps) => (
         />
     </svg>
 );
+
 
 export const Gemini = { Avatar: GeminiAvatar };
 export const DeepSeek = { Avatar: DeepSeekAvatar };
