@@ -126,10 +126,10 @@ export default function Home() {
       let textToAppend = result.extractedText;
 
       if (isSfx) {
-        textToAppend = `*${textToAppend}*`;
+        textToAppend = `* ${textToAppend}`;
       }
       
-      setOriginalText(prev => (prev.trim() ? prev + "\n" + textToAppend : textToAppend));
+      setOriginalText(prev => (prev.trim() ? prev + "\n\n" + textToAppend : textToAppend));
 
       toast({
         title: "OCR Completado",
