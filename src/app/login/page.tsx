@@ -35,11 +35,20 @@ export default function LoginPage() {
     }, [state, toast]);
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary/40 p-4">
-            <Card className="w-full max-w-sm animate-in fade-in-0 slide-in-from-bottom-12 duration-1000 ease-in-out shadow-2xl">
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-4">
+            <div className="absolute inset-0 z-0">
+                <div className="absolute top-[10%] left-[10%] h-32 w-32 rounded-full bg-primary/10 animate-float [animation-delay:-2s]"></div>
+                <div className="absolute top-[20%] right-[15%] h-48 w-48 rounded-full bg-secondary/20 animate-float [animation-delay:-4s]"></div>
+                <div className="absolute bottom-[15%] left-[25%] h-24 w-24 rounded-full bg-primary/5 animate-float"></div>
+                <div className="absolute bottom-[10%] right-[5%] h-16 w-16 rounded-full bg-secondary/10 animate-float [animation-delay:-6s]"></div>
+            </div>
+            
+            <div className="absolute inset-0 z-10 bg-gradient-to-br from-background/50 via-background/30 to-secondary/20 backdrop-blur-sm"></div>
+
+            <Card className="z-20 w-full max-w-sm animate-in fade-in-0 slide-in-from-bottom-12 duration-1000 ease-in-out shadow-2xl bg-card/80 backdrop-blur-md border border-white/10">
                 <CardHeader className="text-center p-8">
-                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 transition-transform duration-500 hover:scale-110">
-                        <BookMarked className="h-10 w-10 text-primary" />
+                    <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10 transition-transform duration-500 hover:scale-110 hover:rotate-6">
+                        <BookMarked className="h-12 w-12 text-primary" />
                     </div>
                     <CardTitle className="text-3xl">Manhwa Scribe</CardTitle>
                     <CardDescription className="pt-2">Por favor, inicia sesión para continuar</CardDescription>
@@ -54,7 +63,7 @@ export default function LoginPage() {
                                 type="text" 
                                 placeholder="usuario" 
                                 required 
-                                className="transition-shadow duration-300 focus:shadow-md"
+                                className="transition-shadow duration-300 focus:shadow-md bg-background/70"
                             />
                         </div>
                         <div className="space-y-2">
@@ -65,7 +74,7 @@ export default function LoginPage() {
                                 type="password" 
                                 placeholder="••••••••" 
                                 required 
-                                className="transition-shadow duration-300 focus:shadow-md"
+                                className="transition-shadow duration-300 focus:shadow-md bg-background/70"
                             />
                         </div>
                         <SubmitButton />
