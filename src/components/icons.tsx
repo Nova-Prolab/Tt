@@ -25,7 +25,7 @@ const AvatarWrapper: React.FC<React.PropsWithChildren<AvatarProps>> = ({
     <div
       style={style}
       className={cn(
-        'flex items-center justify-center overflow-hidden bg-background',
+        'flex items-center justify-center overflow-hidden bg-transparent',
         shape === 'circle' ? 'rounded-full' : 'rounded-md',
         className
       )}
