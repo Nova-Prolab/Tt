@@ -20,7 +20,7 @@ const GeminiAvatar = ({ size = 20, ...props }: AvatarProps) => (
   </svg>
 );
 
-const DeepseekAvatar = ({ size = 20, ...props }: AvatarProps) => (
+const DeepSeekAvatar = ({ size = 20, ...props }: AvatarProps) => (
     <svg 
         xmlns="http://www.w3.org/2000/svg" 
         width={size}
@@ -36,4 +36,4 @@ const DeepseekAvatar = ({ size = 20, ...props }: AvatarProps) => (
 );
 
 export const Gemini = { Avatar: GeminiAvatar };
-export const Deepseek = { Avatar: DeepseekAvatar };
+export const DeepSeek = { Avatar: DeepSeekAvatar };
