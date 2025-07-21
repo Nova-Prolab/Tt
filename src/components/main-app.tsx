@@ -333,6 +333,12 @@ export default function MainApp() {
         text: originalText,
         language: targetLanguage,
       });
+      if (result.sfxTranslations.length === 0) {
+        toast({
+            title: "No se encontraron SFX",
+            description: "Asegúrate de que los SFX estén en una línea propia y comiencen con un asterisco (ej. * SFX).",
+        });
+      }
       setAiSfx(result);
     } catch (error) {
       console.error(error);
