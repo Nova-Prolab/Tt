@@ -144,6 +144,7 @@ export default function MainApp() {
       const result = await extractTextFromImage({ imageDataUri: croppedImageDataUrl });
       let textToAppend = result.extractedText;
 
+      // The correct format for AI detection is "* SFX_TEXT" on its own line.
       if (isSfx) {
         textToAppend = `* ${textToAppend}`;
       }
@@ -559,10 +560,10 @@ export default function MainApp() {
   };
 
   const handleApplySfx = (sfxText: string) => {
-    const formattedSfx = `*${sfxText}*`;
+    const formattedSfx = `* ${sfxText}`;
     
     // Adds a space if there is existing text.
-    const newText = manualTranslation ? `${manualTranslation} ${formattedSfx}` : formattedSfx;
+    const newText = manualTranslation ? `${manualTranslation}\n${formattedSfx}` : formattedSfx;
     setManualTranslation(newText);
     toast({
       title: "SFX Aplicado",

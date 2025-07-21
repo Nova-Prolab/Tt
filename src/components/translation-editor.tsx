@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TextToolsMenu } from "./text-tools-menu"
-import { useRef, useState } from "react"
+import { useRef } from "react"
 
 
 type TranslationEditorProps = {
@@ -65,7 +65,6 @@ export function TranslationEditor({
   const wordCount = (manualTranslation.trim() === '') ? 0 : manualTranslation.trim().split(/\s+/).length;
   const selectedTranslator = translatorOptions.find(opt => opt.value === translator);
   const manualTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const [selectedManualText, setSelectedManualText] = useState("");
 
   const handleOriginalTextSelect = (event: React.SyntheticEvent<HTMLTextAreaElement>) => {
     const textarea = event.currentTarget;
@@ -75,17 +74,6 @@ export function TranslationEditor({
     );
     onOriginalTextSelect(selection);
   };
-  
-  const handleManualTextSelect = () => {
-    const textarea = manualTextareaRef.current;
-    if (textarea) {
-        const selection = textarea.value.substring(
-            textarea.selectionStart,
-            textarea.selectionEnd
-        );
-        setSelectedManualText(selection);
-    }
-  }
 
   const handleCopyToManual = () => {
     onManualTranslationChange(aiTranslation);
@@ -130,7 +118,6 @@ export function TranslationEditor({
                              <TextToolsMenu 
                                 onAction={handleTextToolAction} 
                                 text={manualTranslation} 
-                                selectedText={selectedManualText} 
                                 textareaRef={manualTextareaRef}
                             />
                         </div>
@@ -140,7 +127,6 @@ export function TranslationEditor({
                             placeholder="Escribe tu traducción aquí..."
                             value={manualTranslation}
                             onChange={(e) => onManualTranslationChange(e.target.value)}
-                            onSelect={handleManualTextSelect}
                             className="h-48 resize-none"
                             aria-label="Tu Traducción"
                         />
