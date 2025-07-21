@@ -30,7 +30,7 @@ const SfxTranslationSuggestionSchema = z.object({
   suggestions: z
     .array(z.string())
     .describe(
-      'A list of creative and contextually appropriate translations for this specific SFX.'
+      'A list of 3-5 creative and contextually appropriate translations for this specific SFX.'
     ),
 });
 
