@@ -70,15 +70,14 @@ export default function MainApp() {
 
   const { toast } = useToast();
 
-  const setManualTranslation = (text: string) => {
-    // Only add to history if the text is different from the current history entry
-    if (translationHistory[currentHistoryIndex] !== text) {
+  const setManualTranslation = (text: string, newHistoryEntry = true) => {
+    _setManualTranslation(text);
+    if (newHistoryEntry) {
         const newHistory = translationHistory.slice(0, currentHistoryIndex + 1);
         newHistory.push(text);
         setTranslationHistory(newHistory);
         setCurrentHistoryIndex(newHistory.length - 1);
     }
-    _setManualTranslation(text);
   };
   
   const handleUndo = () => {
@@ -758,3 +757,5 @@ export default function MainApp() {
     </div>
   );
 }
+
+    

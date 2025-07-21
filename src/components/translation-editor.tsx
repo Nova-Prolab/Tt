@@ -21,7 +21,7 @@ type TranslationEditorProps = {
   onOriginalTextChange: (text: string) => void;
   onOriginalTextSelect: (text: string) => void;
   manualTranslation: string;
-  onManualTranslationChange: (text: string) => void;
+  onManualTranslationChange: (text: string, newHistoryEntry?: boolean) => void;
   aiTranslation: string;
   isAiTranslating: boolean;
   
@@ -83,8 +83,8 @@ export function TranslationEditor({
     });
   };
 
-  const handleTextToolAction = (newText: string) => {
-    onManualTranslationChange(newText);
+  const handleTextToolAction = (newText: string, newHistoryEntry: boolean = true) => {
+    onManualTranslationChange(newText, newHistoryEntry);
   }
 
   return (
@@ -247,3 +247,5 @@ export function TranslationEditor({
     </Card>
   )
 }
+
+    
