@@ -9,15 +9,15 @@ import { TranslationEditor } from "@/components/translation-editor";
 import { AiAssist } from "@/components/ai-assist";
 import {
   provideContextualUnderstanding,
-  ProvideContextualUnderstandingOutput,
+  type ProvideContextualUnderstandingOutput,
 } from "@/ai/flows/provide-contextual-understanding";
 import {
   suggestTranslationImprovements,
-  SuggestTranslationImprovementsOutput,
+  type SuggestTranslationImprovementsOutput,
 } from "@/ai/flows/suggest-translation-improvements";
 import {
   explainPhraseContext,
-  ExplainPhraseContextOutput,
+  type ExplainPhraseContextOutput,
 } from "@/ai/flows/explain-phrase-context";
 import {
   translateText,
@@ -25,313 +25,333 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { extractTextFromImage } from "@/ai/flows/extract-text-from-image";
 import { correctSpelling } from "@/ai/flows/correct-spelling";
-import { analyzeTone, AnalyzeToneOutput } from "@/ai/flows/analyze-tone";
-import { translateSfx, TranslateSfxOutput } from "@/ai/flows/translate-sfx";
-import { generateAlternativeTranslations, GenerateAlternativeTranslationsOutput } from "@/ai/flows/generate-alternative-translations";
-import { analyzeFormality, AnalyzeFormalityOutput } from "@/ai/flows/analyze-formality";
-import { analyzeTranslationQuality, AnalyzeTranslationQualityOutput } from "@/ai/flows/analyze-translation-quality";
-import { summarizePanel, SummarizePanelOutput } from "@/ai/flows/summarize-panel";
-import { identifySpeakers, IdentifySpeakersOutput } from "@/ai/flows/identify-speakers";
-import { rephraseText, RephraseTextOutput } from "@/ai/flows/rephrase-text";
+import { analyzeTone, type AnalyzeToneOutput } from "@/ai/flows/analyze-tone";
+import { translateSfx, type TranslateSfxOutput } from "@/ai/flows/translate-sfx";
+import { generateAlternativeTranslations, type GenerateAlternativeTranslationsOutput } from "@/ai/flows/generate-alternative-translations";
+import { analyzeFormality, type AnalyzeFormalityOutput } from "@/ai/flows/analyze-formality";
+import { analyzeTranslationQuality, type AnalyzeTranslationQualityOutput } from "@/ai/flows/analyze-translation-quality";
+import { summarizePanel, type SummarizePanelOutput } from "@/ai/flows/summarize-panel";
+import { identifySpeakers, type IdentifySpeakersOutput } from "@/ai/flows/identify-speakers";
+import { rephraseText, type RephraseTextOutput } from "@/ai/flows/rephrase-text";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2 } from "lucide-react";
+
+type Project = {
+  id: string;
+  name: string;
+  imageSrc: string | null;
+  originalText: string;
+  manualTranslation: string;
+  translationHistory: string[];
+  currentHistoryIndex: number;
+  aiTranslation: string;
+  selectedText: string;
+  aiSuggestion: SuggestTranslationImprovementsOutput | null;
+  aiContext: ProvideContextualUnderstandingOutput | null;
+  aiExplanation: ExplainPhraseContextOutput | null;
+  aiTone: AnalyzeToneOutput | null;
+  aiSfx: TranslateSfxOutput | null;
+  aiAlternatives: GenerateAlternativeTranslationsOutput | null;
+  aiFormality: AnalyzeFormalityOutput | null;
+  aiQuality: AnalyzeTranslationQualityOutput | null;
+  aiSummary: SummarizePanelOutput | null;
+  aiSpeakers: IdentifySpeakersOutput | null;
+  aiRephrasing: RephraseTextOutput | null;
+};
+
+const createNewProject = (name: string): Project => ({
+  id: Date.now().toString(),
+  name,
+  imageSrc: null,
+  originalText: "",
+  manualTranslation: "",
+  translationHistory: [""],
+  currentHistoryIndex: 0,
+  aiTranslation: "",
+  selectedText: "",
+  aiSuggestion: null,
+  aiContext: null,
+  aiExplanation: null,
+  aiTone: null,
+  aiSfx: null,
+  aiAlternatives: null,
+  aiFormality: null,
+  aiQuality: null,
+  aiSummary: null,
+  aiSpeakers: null,
+  aiRephrasing: null,
+});
 
 export default function MainApp() {
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [originalText, setOriginalText] = useState("");
-  const [manualTranslation, _setManualTranslation] = useState("");
-  
-  const [translationHistory, setTranslationHistory] = useState<string[]>([""]);
-  const [currentHistoryIndex, setCurrentHistoryIndex] = useState(0);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
 
-  const [aiTranslation, setAiTranslation] = useState("");
-  const [selectedText, setSelectedText] = useState("");
   const [translator, setTranslator] = useState("gemini");
   const [targetLanguage, setTargetLanguage] = useState("Spanish");
-  
-  const [aiSuggestion, setAiSuggestion] =
-    useState<SuggestTranslationImprovementsOutput | null>(null);
-  const [aiContext, setAiContext] =
-    useState<ProvideContextualUnderstandingOutput | null>(null);
-  const [aiExplanation, setAiExplanation] = 
-    useState<ExplainPhraseContextOutput | null>(null);
-  const [aiTone, setAiTone] = useState<AnalyzeToneOutput | null>(null);
-  const [aiSfx, setAiSfx] = useState<TranslateSfxOutput | null>(null);
-  const [aiAlternatives, setAiAlternatives] = useState<GenerateAlternativeTranslationsOutput | null>(null);
-  const [aiFormality, setAiFormality] = useState<AnalyzeFormalityOutput | null>(null);
-  const [aiQuality, setAiQuality] = useState<AnalyzeTranslationQualityOutput | null>(null);
-  const [aiSummary, setAiSummary] = useState<SummarizePanelOutput | null>(null);
-  const [aiSpeakers, setAiSpeakers] = useState<IdentifySpeakersOutput | null>(null);
-  const [aiRephrasing, setAiRephrasing] = useState<RephraseTextOutput | null>(null);
-
   const [isLoading, setIsLoading] = useState<
     "suggestion" | "context" | "explanation" | "translation" | "ocr" | "spelling" | "tone" | "sfx" | "alternatives" | "formality" | "quality" | "summary" | "speakers" | "rephrasing" | null
   >(null);
 
   const { toast } = useToast();
-
-  // Load state from localStorage on initial render
+  
+  // Load projects from localStorage on initial render
   useEffect(() => {
     try {
-      const savedImageSrc = localStorage.getItem('manhwaScribe-imageSrc');
-      const savedOriginalText = localStorage.getItem('manhwaScribe-originalText');
-      const savedManualTranslation = localStorage.getItem('manhwaScribe-manualTranslation');
-
-      if (savedImageSrc) setImageSrc(savedImageSrc);
-      if (savedOriginalText) setOriginalText(savedOriginalText);
-      if (savedManualTranslation) {
-        _setManualTranslation(savedManualTranslation);
-        setTranslationHistory([savedManualTranslation]);
-        setCurrentHistoryIndex(0);
+      const savedState = localStorage.getItem('manhwaScribe-state');
+      if (savedState) {
+        const { projects: savedProjects, activeProjectId: savedActiveId } = JSON.parse(savedState);
+        if (savedProjects && savedProjects.length > 0) {
+          setProjects(savedProjects);
+          setActiveProjectId(savedActiveId || savedProjects[0].id);
+        } else {
+          // If no projects, create a default one
+          handleNewProject();
+        }
+      } else {
+        handleNewProject();
       }
     } catch (error) {
       console.error("Failed to load state from localStorage", error);
+      handleNewProject();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Save state to localStorage whenever it changes
+  // Save state to localStorage whenever projects or active project changes
   useEffect(() => {
-    try {
-      if (imageSrc) {
-        localStorage.setItem('manhwaScribe-imageSrc', imageSrc);
-      } else {
-        localStorage.removeItem('manhwaScribe-imageSrc');
+    if (projects.length > 0 && activeProjectId) {
+      try {
+        const stateToSave = JSON.stringify({ projects, activeProjectId });
+        localStorage.setItem('manhwaScribe-state', stateToSave);
+      } catch (error) {
+        console.error("Failed to save state to localStorage", error);
       }
-    } catch (error) {
-      console.error("Failed to save imageSrc to localStorage", error);
     }
-  }, [imageSrc]);
+  }, [projects, activeProjectId]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('manhwaScribe-originalText', originalText);
-    } catch (error) {
-      console.error("Failed to save originalText to localStorage", error);
-    }
-  }, [originalText]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('manhwaScribe-manualTranslation', manualTranslation);
-    } catch (error) {
-      console.error("Failed to save manualTranslation to localStorage", error);
-    }
-  }, [manualTranslation]);
-
-
-  const setManualTranslation = (text: string, newHistoryEntry = true) => {
-    _setManualTranslation(text);
-    if (newHistoryEntry) {
-        const newHistory = translationHistory.slice(0, currentHistoryIndex + 1);
-        newHistory.push(text);
-        setTranslationHistory(newHistory);
-        setCurrentHistoryIndex(newHistory.length - 1);
-    }
+  const updateActiveProject = (updater: (project: Project) => Partial<Project>) => {
+    setProjects(prevProjects => 
+      prevProjects.map(p => 
+        p.id === activeProjectId ? { ...p, ...updater(p) } : p
+      )
+    );
   };
   
-  const handleUndo = () => {
-    if (currentHistoryIndex > 0) {
-      const newIndex = currentHistoryIndex - 1;
-      setCurrentHistoryIndex(newIndex);
-      _setManualTranslation(translationHistory[newIndex]);
-    }
-  };
-
-  const handleRedo = () => {
-    if (currentHistoryIndex < translationHistory.length - 1) {
-      const newIndex = currentHistoryIndex + 1;
-      setCurrentHistoryIndex(newIndex);
-      _setManualTranslation(translationHistory[newIndex]);
-    }
-  };
-  
-  const canUndo = currentHistoryIndex > 0;
-  const canRedo = currentHistoryIndex < translationHistory.length - 1;
-
+  const activeProject = projects.find(p => p.id === activeProjectId) || null;
 
   const clearAiOutputs = () => {
-    setAiSuggestion(null);
-    setAiContext(null);
-    setAiExplanation(null);
-    setAiTone(null);
-    setAiSfx(null);
-    setAiAlternatives(null);
-    setAiFormality(null);
-    setAiQuality(null);
-    setAiSummary(null);
-    setAiSpeakers(null);
-    setAiRephrasing(null);
-  }
+    updateActiveProject(() => ({
+      aiSuggestion: null,
+      aiContext: null,
+      aiExplanation: null,
+      aiTone: null,
+      aiSfx: null,
+      aiAlternatives: null,
+      aiFormality: null,
+      aiQuality: null,
+      aiSummary: null,
+      aiSpeakers: null,
+      aiRephrasing: null,
+    }));
+  };
+  
+  // --- Project Management Handlers ---
 
+  const handleNewProject = () => {
+    const newProject = createNewProject(`Lienzo ${projects.length + 1}`);
+    setProjects(prev => [...prev, newProject]);
+    setActiveProjectId(newProject.id);
+  };
+
+  const handleSwitchProject = (id: string) => {
+    setActiveProjectId(id);
+  };
+
+  const handleRenameProject = () => {
+    const currentName = activeProject?.name || "";
+    const newName = prompt("Introduce el nuevo nombre para este lienzo:", currentName);
+    if (newName && newName.trim() !== "") {
+      updateActiveProject(() => ({ name: newName.trim() }));
+    }
+  };
+
+  const handleDeleteProject = () => {
+    if (projects.length <= 1) {
+      toast({ title: "Acción no permitida", description: "No puedes eliminar el único lienzo.", variant: "destructive"});
+      return;
+    }
+    if (!activeProject) return;
+    const confirmation = confirm(`¿Estás seguro de que quieres eliminar "${activeProject.name}"? Esta acción no se puede deshacer.`);
+    if (confirmation) {
+      const newProjects = projects.filter(p => p.id !== activeProjectId);
+      setProjects(newProjects);
+      setActiveProjectId(newProjects[0].id);
+      toast({ title: "Lienzo Eliminado", description: `Se ha eliminado "${activeProject.name}".`});
+    }
+  };
+
+
+  // --- State setters that update the active project ---
+  
+  const setManualTranslation = (text: string, newHistoryEntry = true) => {
+    updateActiveProject(p => {
+      if (newHistoryEntry) {
+        const newHistory = p.translationHistory.slice(0, p.currentHistoryIndex + 1);
+        newHistory.push(text);
+        return { 
+          manualTranslation: text,
+          translationHistory: newHistory,
+          currentHistoryIndex: newHistory.length - 1,
+        };
+      }
+      return { manualTranslation: text };
+    });
+  };
+
+  const handleUndo = () => {
+    if (!activeProject || activeProject.currentHistoryIndex <= 0) return;
+    const newIndex = activeProject.currentHistoryIndex - 1;
+    updateActiveProject(() => ({
+      currentHistoryIndex: newIndex,
+      manualTranslation: activeProject.translationHistory[newIndex],
+    }));
+  };
+  
+  const handleRedo = () => {
+    if (!activeProject || activeProject.currentHistoryIndex >= activeProject.translationHistory.length - 1) return;
+    const newIndex = activeProject.currentHistoryIndex + 1;
+    updateActiveProject(() => ({
+      currentHistoryIndex: newIndex,
+      manualTranslation: activeProject.translationHistory[newIndex],
+    }));
+  };
+  
+  const canUndo = activeProject ? activeProject.currentHistoryIndex > 0 : false;
+  const canRedo = activeProject ? activeProject.currentHistoryIndex < activeProject.translationHistory.length - 1 : false;
+  
+  const handleOriginalTextChange = (text: string) => {
+    updateActiveProject(() => ({ originalText: text, selectedText: "", aiTranslation: "" }));
+    clearAiOutputs();
+  };
+  
   const handleImageUpload = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      setImageSrc(e.target?.result as string);
+      updateActiveProject(() => ({ imageSrc: e.target?.result as string, originalText: "", manualTranslation: "", aiTranslation: ""}));
+      clearAiOutputs();
     };
     reader.readAsDataURL(file);
-    // Clear old text when new image is uploaded
-    handleOriginalTextChange("");
-    setManualTranslation("", true);
-    setAiTranslation("");
   };
   
-  const handleOriginalTextChange = (text: string) => {
-    setOriginalText(text);
-    setSelectedText("");
-    clearAiOutputs();
-    setAiTranslation("");
-  }
-  
   const handleClearAll = () => {
-    setImageSrc(null);
-    setOriginalText("");
-    setManualTranslation("", true);
-    setAiTranslation("");
-    clearAiOutputs();
-    localStorage.removeItem('manhwaScribe-imageSrc');
-    localStorage.removeItem('manhwaScribe-originalText');
-    localStorage.removeItem('manhwaScribe-manualTranslation');
-    toast({
-        title: "Lienzo Limpio",
-        description: "Se ha borrado toda la sesión de traducción.",
-    });
-  }
-
+    if (!activeProject) return;
+    const confirmation = confirm(`¿Estás seguro de que quieres limpiar completamente el lienzo "${activeProject.name}"?`);
+    if (confirmation) {
+      const newProject = createNewProject(activeProject!.name);
+      setProjects(prev => prev.map(p => p.id === activeProjectId ? { ...newProject, id: p.id } : p));
+      toast({
+          title: "Lienzo Limpio",
+          description: "Se ha borrado toda la sesión de traducción actual.",
+      });
+    }
+  };
 
   const handleOcr = async (croppedImageDataUrl: string, isSfx: boolean) => {
-    if (!imageSrc) {
-      toast({
-        title: "No hay Imagen",
-        description: "Por favor, sube una imagen primero.",
-        variant: "destructive",
-      });
+    if (!activeProject?.imageSrc) {
+      toast({ title: "No hay Imagen", description: "Por favor, sube una imagen primero.", variant: "destructive" });
       return;
     }
     setIsLoading("ocr");
     try {
       const result = await extractTextFromImage({ imageDataUri: croppedImageDataUrl });
       let textToAppend = result.extractedText;
-
       if (isSfx) {
         textToAppend = `* ${textToAppend}`;
       }
-      
-      setOriginalText(prev => (prev.trim() ? prev + "\n\n" + textToAppend : textToAppend));
-
-      toast({
-        title: "OCR Completado",
-        description: "Texto extraído de la selección y añadido al editor.",
-      });
+      updateActiveProject(p => ({
+        originalText: p.originalText.trim() ? `${p.originalText}\n\n${textToAppend}` : textToAppend
+      }));
+      toast({ title: "OCR Completado", description: "Texto extraído de la selección y añadido al editor." });
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error de OCR",
-        description: "No se pudo extraer el texto de la imagen.",
-        variant: "destructive",
-      });
+      toast({ title: "Error de OCR", description: "No se pudo extraer el texto de la imagen.", variant: "destructive" });
     } finally {
       setIsLoading(null);
     }
   };
 
   const handleAiTranslate = async () => {
-    if (!originalText) {
-      toast({
-        title: "Falta el Texto Original",
-        description: "Por favor, proporciona el texto original para traducir.",
-        variant: "destructive",
-      });
+    if (!activeProject?.originalText) {
+      toast({ title: "Falta el Texto Original", description: "Por favor, proporciona el texto original para traducir.", variant: "destructive" });
       return;
     }
     setIsLoading("translation");
-    setAiTranslation("");
+    updateActiveProject(() => ({ aiTranslation: "" }));
     clearAiOutputs();
     try {
       const result = await translateText({
-        text: originalText,
-        targetLanguage: targetLanguage,
+        text: activeProject.originalText,
+        targetLanguage,
         sourceLanguage: "Korean",
-        translator: translator,
+        translator,
       });
-      setAiTranslation(result.translation);
+      updateActiveProject(() => ({ aiTranslation: result.translation }));
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error de IA",
-        description: "No se pudo obtener la traducción de la IA.",
-        variant: "destructive",
-      });
+      toast({ title: "Error de IA", description: "No se pudo obtener la traducción de la IA.", variant: "destructive" });
     } finally {
       setIsLoading(null);
     }
-  }
-
+  };
+  
   const handleSuggestImprovement = async () => {
-    if (!originalText || !manualTranslation) {
-      toast({
-        title: "Falta Texto",
-        description: "Por favor, proporciona tanto el texto original como tu traducción.",
-        variant: "destructive",
-      });
+    if (!activeProject?.originalText || !activeProject?.manualTranslation) {
+      toast({ title: "Falta Texto", description: "Por favor, proporciona tanto el texto original como tu traducción.", variant: "destructive" });
       return;
     }
     setIsLoading("suggestion");
     clearAiOutputs();
     try {
       const result = await suggestTranslationImprovements({
-        originalText,
-        translatedText: manualTranslation,
+        originalText: activeProject.originalText,
+        translatedText: activeProject.manualTranslation,
         context: "Una conversación amistosa entre dos personajes en un entorno moderno.",
       });
-      setAiSuggestion(result);
+      updateActiveProject(() => ({ aiSuggestion: result }));
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error de IA",
-        description: "No se pudo obtener la sugerencia.",
-        variant: "destructive",
-      });
+      toast({ title: "Error de IA", description: "No se pudo obtener la sugerencia.", variant: "destructive" });
     } finally {
       setIsLoading(null);
     }
   };
-
+  
   const handleGetContext = async () => {
-    if (!originalText) {
-      toast({
-        title: "Falta Texto",
-        description: "Por favor, proporciona el texto original.",
-        variant: "destructive",
-      });
+    if (!activeProject?.originalText) {
+      toast({ title: "Falta Texto", description: "Por favor, proporciona el texto original.", variant: "destructive" });
       return;
     }
     setIsLoading("context");
     clearAiOutputs();
     try {
       const result = await provideContextualUnderstanding({
-        text: originalText,
-        image: imageSrc || undefined,
+        text: activeProject.originalText,
+        image: activeProject.imageSrc || undefined,
       });
-      setAiContext(result);
+      updateActiveProject(() => ({ aiContext: result }));
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error de IA",
-        description: "No se pudo obtener el contexto.",
-        variant: "destructive",
-      });
+      toast({ title: "Error de IA", description: "No se pudo obtener el contexto.", variant: "destructive" });
     } finally {
       setIsLoading(null);
     }
   };
 
   const handleExplainPhrase = async () => {
-    const textToExplain = selectedText || originalText;
+    if (!activeProject) return;
+    const textToExplain = activeProject.selectedText || activeProject.originalText;
     if (!textToExplain) {
-      toast({
-        title: "No hay Texto para Explicar",
-        description: "Por favor, añade texto original o selecciona una frase para obtener una explicación.",
-        variant: "destructive",
-      });
+      toast({ title: "No hay Texto para Explicar", description: "Por favor, añade texto original o selecciona una frase para obtener una explicación.", variant: "destructive" });
       return;
     }
     setIsLoading("explanation");
@@ -339,30 +359,23 @@ export default function MainApp() {
     try {
       const result = await explainPhraseContext({
         phrase: textToExplain,
-        context: originalText,
-        image: imageSrc || undefined,
+        context: activeProject.originalText,
+        image: activeProject.imageSrc || undefined,
       });
-      setAiExplanation(result);
+      updateActiveProject(() => ({ aiExplanation: result }));
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error de IA",
-        description: "No se pudo obtener la explicación.",
-        variant: "destructive",
-      });
+      toast({ title: "Error de IA", description: "No se pudo obtener la explicación.", variant: "destructive" });
     } finally {
       setIsLoading(null);
     }
   };
 
   const handleAnalyzeTone = async () => {
-    const textToAnalyze = selectedText || originalText;
+    if (!activeProject) return;
+    const textToAnalyze = activeProject.selectedText || activeProject.originalText;
     if (!textToAnalyze) {
-      toast({
-        title: "No hay Texto para Analizar",
-        description: "Por favor, añade texto original o selecciona una frase.",
-        variant: "destructive",
-      });
+      toast({ title: "No hay Texto para Analizar", description: "Por favor, añade texto original o selecciona una frase.", variant: "destructive" });
       return;
     }
     setIsLoading("tone");
@@ -372,62 +385,44 @@ export default function MainApp() {
         text: textToAnalyze,
         language: targetLanguage,
       });
-      setAiTone(result);
+      updateActiveProject(() => ({ aiTone: result }));
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error de IA",
-        description: "No se pudo analizar el tono.",
-        variant: "destructive",
-      });
+      toast({ title: "Error de IA", description: "No se pudo analizar el tono.", variant: "destructive" });
     } finally {
       setIsLoading(null);
     }
   };
 
   const handleTranslateSfx = async () => {
-    if (!originalText) {
-      toast({
-        title: "No hay Texto Original",
-        description: "Por favor, añade el texto original que contiene los SFX.",
-        variant: "destructive",
-      });
+    if (!activeProject?.originalText) {
+      toast({ title: "No hay Texto Original", description: "Por favor, añade el texto original que contiene los SFX.", variant: "destructive" });
       return;
     }
     setIsLoading("sfx");
     clearAiOutputs();
     try {
       const result = await translateSfx({
-        text: originalText,
+        text: activeProject.originalText,
         language: targetLanguage,
       });
       if (result.sfxTranslations.length === 0) {
-        toast({
-            title: "No se encontraron SFX",
-            description: "Asegúrate de que los SFX estén en una línea propia y comiencen con un asterisco (ej. * SFX).",
-        });
+        toast({ title: "No se encontraron SFX", description: "Asegúrate de que los SFX estén en una línea propia y comiencen con un asterisco (ej. * SFX)." });
       }
-      setAiSfx(result);
+      updateActiveProject(() => ({ aiSfx: result }));
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error de IA",
-        description: "No se pudo traducir el SFX.",
-        variant: "destructive",
-      });
+      toast({ title: "Error de IA", description: "No se pudo traducir el SFX.", variant: "destructive" });
     } finally {
       setIsLoading(null);
     }
   };
-
+  
   const handleGenerateAlternatives = async () => {
-    const textToTranslate = selectedText || originalText;
+    if (!activeProject) return;
+    const textToTranslate = activeProject.selectedText || activeProject.originalText;
     if (!textToTranslate) {
-      toast({
-        title: "No hay Texto para Traducir",
-        description: "Por favor, añade texto original o selecciona una frase.",
-        variant: "destructive",
-      });
+      toast({ title: "No hay Texto para Traducir", description: "Por favor, añade texto original o selecciona una frase.", variant: "destructive" });
       return;
     }
     setIsLoading("alternatives");
@@ -437,27 +432,20 @@ export default function MainApp() {
         text: textToTranslate,
         targetLanguage: targetLanguage,
       });
-      setAiAlternatives(result);
+      updateActiveProject(() => ({ aiAlternatives: result }));
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error de IA",
-        description: "No se pudieron generar traducciones alternativas.",
-        variant: "destructive",
-      });
+      toast({ title: "Error de IA", description: "No se pudieron generar traducciones alternativas.", variant: "destructive" });
     } finally {
       setIsLoading(null);
     }
   };
 
   const handleAnalyzeFormality = async () => {
-    const textToAnalyze = selectedText || originalText;
+    if (!activeProject) return;
+    const textToAnalyze = activeProject.selectedText || activeProject.originalText;
     if (!textToAnalyze) {
-      toast({
-        title: "No hay Texto para Analizar",
-        description: "Por favor, añade texto original o selecciona una frase.",
-        variant: "destructive",
-      });
+      toast({ title: "No hay Texto para Analizar", description: "Por favor, añade texto original o selecciona una frase.", variant: "destructive" });
       return;
     }
     setIsLoading("formality");
@@ -467,57 +455,42 @@ export default function MainApp() {
         text: textToAnalyze,
         language: targetLanguage,
       });
-      setAiFormality(result);
+      updateActiveProject(() => ({ aiFormality: result }));
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error de IA",
-        description: "No se pudo analizar la formalidad.",
-        variant: "destructive",
-      });
+      toast({ title: "Error de IA", description: "No se pudo analizar la formalidad.", variant: "destructive" });
     } finally {
       setIsLoading(null);
     }
   };
-
+  
   const handleAnalyzeQuality = async () => {
-    if (!originalText || !manualTranslation) {
-      toast({
-        title: "Falta Texto",
-        description: "Por favor, proporciona el texto original y tu traducción para analizar la calidad.",
-        variant: "destructive",
-      });
+    if (!activeProject?.originalText || !activeProject?.manualTranslation) {
+      toast({ title: "Falta Texto", description: "Por favor, proporciona el texto original y tu traducción para analizar la calidad.", variant: "destructive" });
       return;
     }
     setIsLoading("quality");
     clearAiOutputs();
     try {
       const result = await analyzeTranslationQuality({
-        originalText,
-        translatedText: manualTranslation,
+        originalText: activeProject.originalText,
+        translatedText: activeProject.manualTranslation,
         language: targetLanguage,
       });
-      setAiQuality(result);
+      updateActiveProject(() => ({ aiQuality: result }));
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error de IA",
-        description: "No se pudo analizar la calidad de la traducción.",
-        variant: "destructive",
-      });
+      toast({ title: "Error de IA", description: "No se pudo analizar la calidad de la traducción.", variant: "destructive" });
     } finally {
       setIsLoading(null);
     }
   };
 
   const handleSummarizePanel = async () => {
-    const textToSummarize = selectedText || originalText;
+    if (!activeProject) return;
+    const textToSummarize = activeProject.selectedText || activeProject.originalText;
     if (!textToSummarize) {
-      toast({
-        title: "No hay Texto para Resumir",
-        description: "Por favor, añade texto original o selecciona una frase.",
-        variant: "destructive",
-      });
+      toast({ title: "No hay Texto para Resumir", description: "Por favor, añade texto original o selecciona una frase.", variant: "destructive" });
       return;
     }
     setIsLoading("summary");
@@ -527,27 +500,20 @@ export default function MainApp() {
         text: textToSummarize,
         language: targetLanguage,
       });
-      setAiSummary(result);
+      updateActiveProject(() => ({ aiSummary: result }));
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error de IA",
-        description: "No se pudo generar el resumen.",
-        variant: "destructive",
-      });
+      toast({ title: "Error de IA", description: "No se pudo generar el resumen.", variant: "destructive" });
     } finally {
       setIsLoading(null);
     }
   };
 
   const handleIdentifySpeakers = async () => {
-    const textToAnalyze = selectedText || originalText;
+    if (!activeProject) return;
+    const textToAnalyze = activeProject.selectedText || activeProject.originalText;
     if (!textToAnalyze) {
-      toast({
-        title: "No hay Diálogo para Analizar",
-        description: "Por favor, añade el texto del diálogo.",
-        variant: "destructive",
-      });
+      toast({ title: "No hay Diálogo para Analizar", description: "Por favor, añade el texto del diálogo.", variant: "destructive" });
       return;
     }
     setIsLoading("speakers");
@@ -557,27 +523,20 @@ export default function MainApp() {
         dialogue: textToAnalyze,
         language: targetLanguage,
       });
-      setAiSpeakers(result);
+      updateActiveProject(() => ({ aiSpeakers: result }));
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error de IA",
-        description: "No se pudieron identificar los interlocutores.",
-        variant: "destructive",
-      });
+      toast({ title: "Error de IA", description: "No se pudieron identificar los interlocutores.", variant: "destructive" });
     } finally {
       setIsLoading(null);
     }
   };
 
   const handleRephraseText = async (style: string) => {
-    const textToRephrase = selectedText || manualTranslation;
+    if (!activeProject) return;
+    const textToRephrase = activeProject.selectedText || activeProject.manualTranslation;
     if (!textToRephrase) {
-      toast({
-        title: "No hay Texto para Reformular",
-        description: "Escribe o selecciona una traducción para reformular.",
-        variant: "destructive",
-      });
+      toast({ title: "No hay Texto para Reformular", description: "Escribe o selecciona una traducción para reformular.", variant: "destructive" });
       return;
     }
     setIsLoading("rephrasing");
@@ -588,175 +547,145 @@ export default function MainApp() {
         style: style,
         language: targetLanguage,
       });
-      setAiRephrasing(result);
+      updateActiveProject(() => ({ aiRephrasing: result }));
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error de IA",
-        description: "No se pudo reformular el texto.",
-        variant: "destructive",
-      });
+      toast({ title: "Error de IA", description: "No se pudo reformular el texto.", variant: "destructive" });
     } finally {
       setIsLoading(null);
     }
   };
-
+  
   const handleApplySuggestion = (suggestionText: string) => {
     setManualTranslation(suggestionText);
-    toast({
-      title: "Sugerencia Aplicada",
-      description: "La traducción mejorada se ha copiado al editor manual.",
-    });
+    toast({ title: "Sugerencia Aplicada", description: "La traducción mejorada se ha copiado al editor manual." });
   };
-
+  
   const handleApplyAlternative = (alternativeText: string) => {
     setManualTranslation(alternativeText);
-    toast({
-        title: "Alternativa Aplicada",
-        description: "La traducción alternativa se ha copiado al editor manual.",
-    });
+    toast({ title: "Alternativa Aplicada", description: "La traducción alternativa se ha copiado al editor manual." });
   };
-
+  
   const handleApplyRephrasing = (rephrasedText: string) => {
     setManualTranslation(rephrasedText);
-    toast({
-        title: "Texto Reformulado Aplicado",
-        description: "La nueva versión del texto se ha copiado al editor manual.",
-    });
+    toast({ title: "Texto Reformulado Aplicado", description: "La nueva versión del texto se ha copiado al editor manual." });
   };
 
   const handleApplySfx = (sfxText: string) => {
     const formattedSfx = `* ${sfxText}`;
-    
-    // Adds a space if there is existing text.
-    const newText = manualTranslation ? `${manualTranslation}\n${formattedSfx}` : formattedSfx;
+    if (!activeProject) return;
+    const newText = activeProject.manualTranslation ? `${activeProject.manualTranslation}\n${formattedSfx}` : formattedSfx;
     setManualTranslation(newText);
-    toast({
-      title: "SFX Aplicado",
-      description: `Se ha añadido "${formattedSfx}" a tu traducción.`,
-    });
+    toast({ title: "SFX Aplicado", description: `Se ha añadido "${formattedSfx}" a tu traducción.` });
   };
-
+  
   const handleCorrectSpelling = async () => {
-    if (!manualTranslation) {
-      toast({
-        title: "No hay Traducción",
-        description: "Por favor, escribe una traducción para poder corregirla.",
-        variant: "destructive",
-      });
+    if (!activeProject?.manualTranslation) {
+      toast({ title: "No hay Traducción", description: "Por favor, escribe una traducción para poder corregirla.", variant: "destructive" });
       return;
     }
     setIsLoading("spelling");
     try {
       const result = await correctSpelling({
-        text: manualTranslation,
+        text: activeProject.manualTranslation,
         language: targetLanguage,
       });
       setManualTranslation(result.correctedText);
-      toast({
-        title: "Corrección Completa",
-        description: "Se ha corregido la ortografía de tu traducción.",
-      });
+      toast({ title: "Corrección Completa", description: "Se ha corregido la ortografía de tu traducción." });
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error de IA",
-        description: "No se pudo realizar la corrección ortográfica.",
-        variant: "destructive",
-      });
+      toast({ title: "Error de IA", description: "No se pudo realizar la corrección ortográfica.", variant: "destructive" });
     } finally {
       setIsLoading(null);
     }
   };
 
-
   const handleExport = (format: 'txt' | 'srt' | 'docx') => {
+    if (!activeProject || (!activeProject.originalText && !activeProject.manualTranslation)) {
+      toast({ title: "Nada que Exportar", description: "Por favor, añade algo de texto antes de exportar.", variant: "destructive" });
+      return;
+    }
     let content = '';
     let mimeType = '';
-    let filename = '';
-
-    if (!originalText && !manualTranslation) {
-        toast({
-            title: "Nada que Exportar",
-            description: "Por favor, añade algo de texto antes de exportar.",
-            variant: "destructive",
-        });
-        return;
-    }
+    let filename = `traduccion_${activeProject.name.replace(/\s/g, '_')}`;
 
     if (format === 'txt') {
-        content = `Original:\n${originalText}\n\nTraducido:\n${manualTranslation}`;
-        mimeType = 'text/plain';
-        filename = 'traduccion.txt';
+      content = `Original:\n${activeProject.originalText}\n\nTraducido:\n${activeProject.manualTranslation}`;
+      mimeType = 'text/plain';
+      filename += '.txt';
     } else if (format === 'srt') {
-        const lines = manualTranslation.split('\n').filter(line => line.trim() !== '');
-        content = lines.map((line, index) => `${index + 1}\n00:00:0${index * 2},000 --> 00:00:0${index * 2 + 1},500\n${line}\n`).join('\n');
-        mimeType = 'application/x-subrip';
-        filename = 'traduccion.srt';
+      const lines = activeProject.manualTranslation.split('\n').filter(line => line.trim() !== '');
+      content = lines.map((line, index) => `${index + 1}\n00:00:0${index * 2},000 --> 00:00:0${index * 2 + 1},500\n${line}\n`).join('\n');
+      mimeType = 'application/x-subrip';
+      filename += '.srt';
     } else if (format === 'docx') {
-        const doc = new Document({
-            sections: [{
-                children: [
-                    new Paragraph({
-                        children: [new TextRun({ text: "Texto Original:", bold: true })],
-                    }),
-                    new Paragraph({
-                        text: originalText,
-                    }),
-                    new Paragraph({ text: "" }),
-                    new Paragraph({
-                        children: [new TextRun({ text: "Traducción:", bold: true })],
-                    }),
-                    new Paragraph({
-                        text: manualTranslation,
-                    }),
-                ],
-            }],
-        });
-
-        Packer.toBlob(doc).then(blob => {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'traduccion.docx';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        });
-        filename = 'traduccion.docx';
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: [
+            new Paragraph({ children: [new TextRun({ text: "Texto Original:", bold: true })] }),
+            new Paragraph({ text: activeProject.originalText }),
+            new Paragraph({ text: "" }),
+            new Paragraph({ children: [new TextRun({ text: "Traducción:", bold: true })] }),
+            new Paragraph({ text: activeProject.manualTranslation }),
+          ],
+        }],
+      });
+      Packer.toBlob(doc).then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${filename}.docx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+      toast({ title: "Exportado", description: `Traducción exportada como ${filename}.docx` });
+      return;
     }
 
-    if (format !== 'docx') {
-      const blob = new Blob([content], { type: mimeType });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-    
-    toast({
-        title: "Exportado",
-        description: `Traducción exportada como ${filename}`
-    })
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast({ title: "Exportado", description: `Traducción exportada como ${filename}` });
   };
+  
+  if (!activeProject) {
+    return (
+      <div className="flex flex-col min-h-screen bg-secondary/30 items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4">Cargando lienzos...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-secondary/30">
-      <Header onExport={handleExport} />
+      <Header 
+        onExport={handleExport}
+        projects={projects.map(({ id, name }) => ({ id, name }))}
+        activeProjectId={activeProjectId}
+        onSwitchProject={handleSwitchProject}
+        onNewProject={handleNewProject}
+        onRenameProject={handleRenameProject}
+        onDeleteProject={handleDeleteProject}
+      />
       <main className="flex-1 container mx-auto p-4 md:p-6 lg:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           <TranslationEditor
-            originalText={originalText}
+            originalText={activeProject.originalText}
             onOriginalTextChange={handleOriginalTextChange}
-            onOriginalTextSelect={setSelectedText}
-            manualTranslation={manualTranslation}
+            onOriginalTextSelect={(text) => updateActiveProject(() => ({ selectedText: text }))}
+            manualTranslation={activeProject.manualTranslation}
             onManualTranslationChange={setManualTranslation}
-            aiTranslation={aiTranslation}
+            aiTranslation={activeProject.aiTranslation}
             isAiTranslating={isLoading === 'translation'}
             translator={translator}
             onTranslatorChange={setTranslator}
@@ -776,7 +705,7 @@ export default function MainApp() {
             </TabsList>
             <TabsContent value="image-panel">
                <ImagePanel
-                imageSrc={imageSrc}
+                imageSrc={activeProject.imageSrc}
                 onImageUpload={handleImageUpload}
                 onOcr={handleOcr}
                 isOcrLoading={isLoading === 'ocr'}
@@ -801,22 +730,22 @@ export default function MainApp() {
                 onApplyAlternative={handleApplyAlternative}
                 onApplyRephrasing={handleApplyRephrasing}
                 isLoading={isLoading}
-                isActionDisabled={!originalText && !selectedText}
-                isQualityCheckDisabled={!originalText || !manualTranslation}
-                suggestion={aiSuggestion}
-                context={aiContext}
-                explanation={aiExplanation}
-                tone={aiTone}
-                sfx={aiSfx}
-                alternatives={aiAlternatives}
-                formality={aiFormality}
-                quality={aiQuality}
-                summary={aiSummary}
-                speakers={aiSpeakers}
-                rephrasing={aiRephrasing}
-                selectedText={selectedText || originalText}
-                originalText={originalText}
-                manualTranslation={manualTranslation}
+                isActionDisabled={!activeProject.originalText && !activeProject.selectedText}
+                isQualityCheckDisabled={!activeProject.originalText || !activeProject.manualTranslation}
+                suggestion={activeProject.aiSuggestion}
+                context={activeProject.aiContext}
+                explanation={activeProject.aiExplanation}
+                tone={activeProject.aiTone}
+                sfx={activeProject.aiSfx}
+                alternatives={activeProject.aiAlternatives}
+                formality={activeProject.aiFormality}
+                quality={activeProject.aiQuality}
+                summary={activeProject.aiSummary}
+                speakers={activeProject.aiSpeakers}
+                rephrasing={activeProject.aiRephrasing}
+                selectedText={activeProject.selectedText || activeProject.originalText}
+                originalText={activeProject.originalText}
+                manualTranslation={activeProject.manualTranslation}
               />
             </TabsContent>
           </Tabs>
