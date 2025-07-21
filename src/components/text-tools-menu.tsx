@@ -10,7 +10,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-  DropdownMenuGroup
+  DropdownMenuGroup,
+  DropdownMenuLabel
 } from "@/components/ui/dropdown-menu"
 import {
   Dialog,
@@ -28,11 +29,12 @@ import { cn } from "@/lib/utils"
 
 type TextToolsMenuProps = {
   onAction: (newText: string, newHistoryEntry?: boolean) => void;
+  onClearAll: () => void;
   text: string;
   textareaRef: React.RefObject<HTMLTextAreaElement>;
 }
 
-export function TextToolsMenu({ onAction, text, textareaRef }: TextToolsMenuProps) {
+export function TextToolsMenu({ onAction, onClearAll, text, textareaRef }: TextToolsMenuProps) {
   const [isMarkSfxDialogOpen, setIsMarkSfxDialogOpen] = useState(false);
   const [sfxText, setSfxText] = useState("");
   const { toast } = useToast();
@@ -94,14 +96,6 @@ export function TextToolsMenu({ onAction, text, textareaRef }: TextToolsMenuProp
     toast({
         title: "Formato Limpiado",
         description: "Se han eliminado todos los formatos de onomatopeya.",
-    });
-  }
-
-  const handleClearText = () => {
-    onAction("");
-    toast({
-        title: "Texto Limpiado",
-        description: "Se ha borrado todo el contenido del editor.",
     });
   }
 
@@ -179,9 +173,9 @@ export function TextToolsMenu({ onAction, text, textareaRef }: TextToolsMenuProp
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-           <DropdownMenuItem onClick={handleClearText} className="text-destructive focus:text-destructive">
+           <DropdownMenuItem onClick={onClearAll} className="text-destructive focus:text-destructive">
             <Trash2 className="mr-2 h-4 w-4" />
-            <span>Limpiar todo el texto</span>
+            <span>Limpiar todo y empezar de nuevo</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

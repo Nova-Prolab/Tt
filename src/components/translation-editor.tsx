@@ -35,6 +35,7 @@ type TranslationEditorProps = {
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
+  onClearAll: () => void;
 };
 
 const translatorOptions = [
@@ -59,6 +60,7 @@ export function TranslationEditor({
   onRedo,
   canUndo,
   canRedo,
+  onClearAll
 }: TranslationEditorProps) {
 
   const { toast } = useToast();
@@ -119,6 +121,7 @@ export function TranslationEditor({
                                 onAction={handleTextToolAction} 
                                 text={manualTranslation} 
                                 textareaRef={manualTextareaRef}
+                                onClearAll={onClearAll}
                             />
                         </div>
                         <Textarea

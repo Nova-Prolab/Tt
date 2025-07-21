@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { Header } from "@/components/header";
 import { ImagePanel } from "@/components/image-panel";
@@ -38,9 +38,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export default function MainApp() {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [originalText, setOriginalText] = useState("");
-  
-  // Undo/Redo state for manual translation
   const [manualTranslation, _setManualTranslation] = useState("");
+  
   const [translationHistory, setTranslationHistory] = useState<string[]>([""]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(0);
 
@@ -69,6 +68,55 @@ export default function MainApp() {
   >(null);
 
   const { toast } = useToast();
+
+  // Load state from localStorage on initial render
+  useEffect(() => {
+    try {
+      const savedImageSrc = localStorage.getItem('manhwaScribe-imageSrc');
+      const savedOriginalText = localStorage.getItem('manhwaScribe-originalText');
+      const savedManualTranslation = localStorage.getItem('manhwaScribe-manualTranslation');
+
+      if (savedImageSrc) setImageSrc(savedImageSrc);
+      if (savedOriginalText) setOriginalText(savedOriginalText);
+      if (savedManualTranslation) {
+        _setManualTranslation(savedManualTranslation);
+        setTranslationHistory([savedManualTranslation]);
+        setCurrentHistoryIndex(0);
+      }
+    } catch (error) {
+      console.error("Failed to load state from localStorage", error);
+    }
+  }, []);
+
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      if (imageSrc) {
+        localStorage.setItem('manhwaScribe-imageSrc', imageSrc);
+      } else {
+        localStorage.removeItem('manhwaScribe-imageSrc');
+      }
+    } catch (error) {
+      console.error("Failed to save imageSrc to localStorage", error);
+    }
+  }, [imageSrc]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('manhwaScribe-originalText', originalText);
+    } catch (error) {
+      console.error("Failed to save originalText to localStorage", error);
+    }
+  }, [originalText]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('manhwaScribe-manualTranslation', manualTranslation);
+    } catch (error) {
+      console.error("Failed to save manualTranslation to localStorage", error);
+    }
+  }, [manualTranslation]);
+
 
   const setManualTranslation = (text: string, newHistoryEntry = true) => {
     _setManualTranslation(text);
@@ -120,6 +168,10 @@ export default function MainApp() {
       setImageSrc(e.target?.result as string);
     };
     reader.readAsDataURL(file);
+    // Clear old text when new image is uploaded
+    handleOriginalTextChange("");
+    setManualTranslation("", true);
+    setAiTranslation("");
   };
   
   const handleOriginalTextChange = (text: string) => {
@@ -128,6 +180,22 @@ export default function MainApp() {
     clearAiOutputs();
     setAiTranslation("");
   }
+  
+  const handleClearAll = () => {
+    setImageSrc(null);
+    setOriginalText("");
+    setManualTranslation("", true);
+    setAiTranslation("");
+    clearAiOutputs();
+    localStorage.removeItem('manhwaScribe-imageSrc');
+    localStorage.removeItem('manhwaScribe-originalText');
+    localStorage.removeItem('manhwaScribe-manualTranslation');
+    toast({
+        title: "Lienzo Limpio",
+        description: "Se ha borrado toda la sesión de traducción.",
+    });
+  }
+
 
   const handleOcr = async (croppedImageDataUrl: string, isSfx: boolean) => {
     if (!imageSrc) {
@@ -143,7 +211,6 @@ export default function MainApp() {
       const result = await extractTextFromImage({ imageDataUri: croppedImageDataUrl });
       let textToAppend = result.extractedText;
 
-      // The correct format for AI detection is "* SFX_TEXT" on its own line.
       if (isSfx) {
         textToAppend = `* ${textToAppend}`;
       }
@@ -700,6 +767,7 @@ export default function MainApp() {
             onRedo={handleRedo}
             canUndo={canUndo}
             canRedo={canRedo}
+            onClearAll={handleClearAll}
           />
           <Tabs defaultValue="image-panel" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
